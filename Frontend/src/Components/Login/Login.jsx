@@ -19,14 +19,14 @@ const Login = () => {
 
 
     return (
-        <div className="login-body"> {/* Nova div com a classe login-body */}
+        <div className="login-body"> 
             <div className='container'>
                 <form onSubmit={handleSubmit}> 
                     <h1>SerenaAI</h1>
                     <div className="input-field">
                         <input type="email" placeholder='E-mail' 
                             onChange={(e) => setUsername(e.target.value)}
-                        />
+                        /> 
                         <FaUser className="icon"/>
                     </div>
                     <div className="input-field">
