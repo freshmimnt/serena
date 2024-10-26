@@ -2,8 +2,10 @@
 
 /*CSS DO HEADER*/
 
-.header {   
+.header {    
     background-color: #fff; 
+    gap: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .header-content {
@@ -14,7 +16,7 @@
 
 .header-content img {
     width: 300px; 
-}
+} 
 
 .header nav ul {
     padding: 0; 
@@ -82,6 +84,7 @@
     border-radius: 5px;
     font-size: 16px;
     margin-top: 20px;
+    border: 1px solid #ccc;
   
 }
 

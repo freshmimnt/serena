@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import "./Demo.css";
 import Footer from '../Footer/Footer';
@@ -7,7 +7,11 @@ const Demo = () => {
     
     const footerRef = useRef(null);
 
-    
+   
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
     const scrollToFooter = (e) => {
         e.preventDefault(); 
         footerRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -28,9 +32,9 @@ const Demo = () => {
                             </li>
                         </ul>
                     </nav>
-                </header>
+                </header> 
             </div>
-
+ 
             <div className='container_text'>
                 <h1>DÊ O PRÓXIMO PASSO PARA UMA EQUIPE DE SUCESSO</h1> 
                 <p>Aqui no Serena, você não precisará esperar por contato! Assim que preencher o formulário abaixo, terá acesso
@@ -48,10 +52,9 @@ const Demo = () => {
                 <p>Ao submeter, autorizo que minhas informações pessoais sejam processadas pela Serena para atender à minha solicitação.</p>
             </div>
 
-            
             <Footer ref={footerRef} />
         </div>
     );
 };
 
-export default Demo;
+export default Demo;  
