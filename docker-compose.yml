@@ -1,0 +1,39 @@
+services:
+  mysql_master:
+    image: mysql:8.0
+    container_name: mysql_master
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: serenaAI
+      MYSQL_USER: serena
+      MYSQL_PASSWORD: password
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_master_data:/var/lib/mysql
+    command: --server-id=1 --log-bin=mysql-bin --binlog-do-db=serenaAI --binlog-format=row
+    networks:
+      - my_network
+
+  mysql_replica:
+    image: mysql:8.0
+    container_name: mysql_replica
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: serenaAI
+      MYSQL_USER: serena
+      MYSQL_PASSWORD: password
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql_replica_data:/var/lib/mysql
+    command: --server-id=2 --relay-log=mysql-relay-bin --log-bin=mysql-bin --read-only=1
+    networks:
+      - my_network
+
+volumes:
+  mysql_master_data:
+  mysql_replica_data:
+
+networks:
+  my_network:
