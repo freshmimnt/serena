@@ -23,7 +23,7 @@ const Pagar = () => {
         setShowModal(false);
         navigate('/'); 
     };
-
+ 
     return (
         <div>
             <div className='header'>
@@ -69,7 +69,7 @@ const Pagar = () => {
                         <p>Irá receber no email registrado a credencial para aceder ao seu painel de administrador</p>
                         <p>Obrigado</p>
                     </div>
-                </div>
+                </div> 
             )}
         </div>
     );

@@ -5,6 +5,7 @@ import Demo from './Components/Demo/Demo';
 import LandingPage from './Components/LandingPage/LandingPage';
 import Comprar from './Components/Comprar/Comprar';
 import Pagar from './Components/Pagar/Pagar';
+import Chatbot from './Components/Chatbot/Chatbot';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/demo" element={<Demo />} />
         <Route path="/comprar" element={<Comprar />} />
         <Route path="/pagar" element={<Pagar />} />
+        <Route path='/chatbot' element={<Chatbot/>}/>
 
       </Routes>
     </Router>
