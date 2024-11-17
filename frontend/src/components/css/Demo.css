@@ -1,9 +1,7 @@
-
-
-/*CSS DO HEADER*/
-
-.header {   
+.header {    
     background-color: #fff; 
+    gap: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .header-content {
@@ -14,7 +12,7 @@
 
 .header-content img {
     width: 300px; 
-}
+} 
 
 .header nav ul {
     padding: 0; 
@@ -36,18 +34,12 @@
     font-weight: bold;    
 }
 
-
-
-/*CSS DO CONTAINER_TEXT*/
-
 .container_text {
     background: linear-gradient(90deg, #5de0e6, #004aad); 
     padding: 25px;     
-    margin: 0;
-    
+    margin: 0; 
 }
    
-
 .container_text h1 {
     font-size: 20px;
     text-align: left;
@@ -61,17 +53,13 @@
     
 }
 
-
-/*CSS DO CONTAINER_BODY*/
-
 .container_body {
    display: flex;
    flex-direction: column;
    align-items: center;
    justify-content: center;
    width: 100%;
-   padding: 20px;
-      
+   padding: 20px;     
 }
 
 .container_body input {
@@ -82,7 +70,7 @@
     border-radius: 5px;
     font-size: 16px;
     margin-top: 20px;
-  
+    border: 1px solid #ccc; 
 }
 
 .container_body textarea.mensagem {
@@ -106,7 +94,6 @@
     border-radius: 40px;
     font-size: 18px;
     margin-top: 50px;
-
 }
 
 .container_body p {
@@ -116,5 +103,4 @@
     margin-top: 10px;
     line-height: 1.5;
     max-width: 500px;
-
 }

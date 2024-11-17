@@ -1,4 +1,36 @@
 services:
+  back-end:
+    build:
+      context: backend
+    container_name: back-end
+    working_dir: /usr/src/app
+    networks:
+      - my_network
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+    tty: true
+    ports:
+      - "3000:3000"
+    command: npm run start
+    depends_on:
+      - mysql_master
+
+  front-end:
+    build:
+      context: frontend
+    container_name: front-end
+    working_dir: /usr/src/app
+    networks:
+      - my_network
+    volumes:
+      - ./frontend:/usr/src/app
+      - /usr/src/app/node_modules
+    tty: true
+    ports:
+      - "5173:5173"
+    command: npm run dev
+
   mysql_master:
     image: mysql:8.0
     container_name: mysql_master
@@ -30,6 +62,20 @@ services:
     command: --server-id=2 --relay-log=mysql-relay-bin --log-bin=mysql-bin --read-only=1
     networks:
       - my_network
+
+  nginx:
+    build:
+      context: nginx
+    container_name: nginx
+    restart: always
+    tty: true
+    ports:
+      - "8000:80"
+    networks:
+      - my_network
+    depends_on:
+      - back-end
+      - front-end
 
 volumes:
   mysql_master_data:
