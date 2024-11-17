@@ -1,0 +1,91 @@
+services:
+  back-end:
+    build:
+      context: backend
+    working_dir: /usr/src/app
+    networks:
+      - my_network
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+    tty: true
+    ports:
+      - "3000:3000"
+    command: npm run start
+    depends_on:
+      - mysql_master
+    deploy:
+      replicas: 2 
+      restart_policy:
+        condition: on-failure
+
+  front-end:
+    build:
+      context: frontend
+    working_dir: /usr/src/app
+    networks:
+      - my_network
+    volumes:
+      - ./frontend:/usr/src/app
+      - /usr/src/app/node_modules
+    tty: true
+    ports:
+      - "5173:5173"
+    command: npm run dev
+    deploy:
+      replicas: 2 
+      restart_policy:
+        condition: on-failure
+
+  mysql_master:
+    image: mysql:8.0
+    container_name: mysql_master
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: serenaAI
+      MYSQL_USER: serena
+      MYSQL_PASSWORD: password
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_master_data:/var/lib/mysql
+    command: --server-id=1 --log-bin=mysql-bin --binlog-do-db=serenaAI --binlog-format=row
+    networks:
+      - my_network
+
+  mysql_replica:
+    image: mysql:8.0
+    container_name: mysql_replica
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: serenaAI
+      MYSQL_USER: serena
+      MYSQL_PASSWORD: password
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql_replica_data:/var/lib/mysql
+    command: --server-id=2 --relay-log=mysql-relay-bin --log-bin=mysql-bin --read-only=1
+    networks:
+      - my_network
+
+  nginx:
+    build:
+      context: nginx
+    container_name: nginx
+    restart: always
+    tty: true
+    ports:
+      - "8000:80"
+    networks:
+      - my_network
+    depends_on:
+      - back-end
+      - front-end
+
+volumes:
+  mysql_master_data:
+  mysql_replica_data:
+
+networks:
+  my_network:
