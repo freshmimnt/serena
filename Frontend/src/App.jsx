@@ -6,6 +6,9 @@ import LandingPage from './Components/LandingPage/LandingPage';
 import Comprar from './Components/Comprar/Comprar';
 import Pagar from './Components/Pagar/Pagar';
 import Chatbot from './Components/Chatbot/Chatbot';
+import Respiracao from './Components/Respiracao/Respiracao';
+import Mindfulness from './Components/Mindfulness/Mindfulness';
+
 
 function App() {
   return (
@@ -17,6 +20,9 @@ function App() {
         <Route path="/comprar" element={<Comprar />} />
         <Route path="/pagar" element={<Pagar />} />
         <Route path='/chatbot' element={<Chatbot/>}/>
+        <Route path='/respiracao' element={<Respiracao/>}/>
+        <Route path='/mindfulness' element={<Mindfulness/>}></Route>
+        
 
       </Routes>
     </Router>

@@ -11,19 +11,19 @@
 
 
 .sidebar {
-    width: 350px;
-    padding: 15px;
+    width: 250px;
+    padding: 10px;
     background-color: #f1f1f1;
     border-right: 1px solid #ddd;
 }
 
 .sidebar h4 {
     
-    margin-bottom: 20px;
+    
     margin-top: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     color: #000;
-    font-size: 1.2em;
+    font-size: 2.1em;
 }
 
 .sidebar ul {
@@ -60,23 +60,24 @@
 .btn_config button {   
     margin-left: 3px;
     font-size: 25px;    
-    color: #000;
+    color: #000; 
     border: none;    
     cursor: pointer;
 }
  
-.chatbot-container {
+.chatbot-container { 
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
+    background-color: #ffffff;
 }
 .chatbot-container h1 {
-    margin-bottom: 20px;
-    font-size: 20px;
-    
+    margin-bottom: 0px;
+    font-size: 30px;
+    color: #1f156d;
 }
 
 .chatbot-container img {
@@ -85,15 +86,20 @@
 }
 
 .chat-display {
+    width: 900px;     
+    height: 600px; 
     padding: 10px;
-    height: 800px;
-    overflow-y: auto;
+    overflow-y: auto; 
     display: flex;
     flex-direction: column;
     gap: 5px;
-    background-color: #f9f9f9;
+    background-color: #ffffff; 
     justify-content: flex-start;
+   
+    
 }
+
+
 
 .message.user {
     align-self: flex-end;

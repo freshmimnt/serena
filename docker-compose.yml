@@ -2,40 +2,68 @@ services:
   back-end:
     build:
       context: backend
+    container_name: back-end
     working_dir: /usr/src/app
     networks:
       - my_network
     volumes:
       - ./backend:/usr/src/app
-      - /usr/src/app/node_modules
+      - /usr/src/app/node_modules/
     tty: true
     ports:
-      - "3000:3000"
-    command: npm run start
+      - "5000:5000"
+    command: npm run start   
     depends_on:
       - mysql_master
-    deploy:
-      replicas: 2 
-      restart_policy:
-        condition: on-failure
+
+  back-end2:
+    build:
+      context: backend
+    container_name: back-end2
+    working_dir: /usr/src/app
+    networks:
+      - my_network
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules/
+    tty: true
+    ports:
+      - "5001:5000"
+    command: npm run start   
+    depends_on:
+      - mysql_master
+
 
   front-end:
     build:
       context: frontend
+    container_name: front-end
     working_dir: /usr/src/app
     networks:
       - my_network
     volumes:
       - ./frontend:/usr/src/app
-      - /usr/src/app/node_modules
+      - /usr/src/app/node_modules/
     tty: true
     ports:
-      - "5173:5173"
+      - "5174:5173"
     command: npm run dev
-    deploy:
-      replicas: 2 
-      restart_policy:
-        condition: on-failure
+
+  front-end2:
+    build:
+      context: frontend
+    container_name: front-end2
+    working_dir: /usr/src/app
+    networks:
+      - my_network
+    volumes:
+      - ./frontend:/usr/src/app
+      - /usr/src/app/node_modules/
+    tty: true
+    ports:
+      - "5175:5173"
+    command: npm run dev
+
 
   mysql_master:
     image: mysql:8.0
@@ -81,7 +109,10 @@ services:
       - my_network
     depends_on:
       - back-end
+      - back-end2
       - front-end
+      - front-end2
+
 
 volumes:
   mysql_master_data:

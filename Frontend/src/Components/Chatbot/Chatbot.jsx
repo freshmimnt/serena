@@ -1,20 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./Chatbot.css";
 import "bootstrap/dist/css/bootstrap.min.css"; 
-import { FiSettings } from 'react-icons/fi';
-import { FaTimes } from 'react-icons/fa';
+import { FiSettings } from "react-icons/fi";
+import { FaTimes } from "react-icons/fa";
 
 const Chatbot = () => {
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState([]); 
     const [input, setInput] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const lastMessageRef = useRef(null); 
 
     const toggleModal = () => {
         setIsModalOpen(!isModalOpen);
     };
 
-    
     const sendMessage = async () => {
         if (!input.trim()) return;
 
@@ -45,13 +45,19 @@ const Chatbot = () => {
         setInput(""); 
     };
 
- 
     const handleKeyPress = (e) => {
         if (e.key === "Enter") {
             e.preventDefault(); 
             sendMessage();
         }
     };
+
+   
+    useEffect(() => {
+        if (lastMessageRef.current) {
+            lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [messages]);
 
     return (
         <div className="chatbot-wrapper">
@@ -60,9 +66,8 @@ const Chatbot = () => {
                 <nav>
                     <ul>
                         <li className="sidebar-btn">
-                            <Link to="#">Exercício de Respiração</Link>
-                            <Link to="#">Relaxamento Progressivo</Link>
-                            <Link to="#">Meditação Guiada</Link>
+                            <Link to="/respiracao">Exercício de Respiração</Link>
+                            <Link to="/mindfulness">Técnica de Mindfulness</Link>
                         </li>
                     </ul>
                 </nav>
@@ -72,11 +77,15 @@ const Chatbot = () => {
             </div>
 
             <div className="chatbot-container">
-                <img src="public/Sigla.png" />
-                <h1>Olá, sou sua terapeuta, sinta-se à vontade para compartilhar o que estiver em sua mente, seja o que for.</h1>
+                <img src="/public/Sigla.png"  />
+                <h1>Olá, sou sua terapeuta. Sinta-se à vontade para compartilhar o que estiver em sua mente.</h1>
                 <div className="chat-display">
                     {messages.map((msg, index) => (
-                        <div key={index} className={`message ${msg.sender}`}>
+                        <div
+                            key={index}
+                            className={`message ${msg.sender}`}
+                            ref={index === messages.length - 1 ? lastMessageRef : null}
+                        >
                             {msg.text}
                         </div>
                     ))}
@@ -87,7 +96,7 @@ const Chatbot = () => {
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="Diga-me como está se sentindo hoje?"
-                        onKeyDown={handleKeyPress} 
+                        onKeyDown={handleKeyPress}
                     />
                     <button onClick={sendMessage}>Enviar</button>
                 </div>
