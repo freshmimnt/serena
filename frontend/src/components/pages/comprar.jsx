@@ -1,36 +1,59 @@
 import React, { useRef, useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom'; 
 import "../css/Comprar.css";
 import Footer from './footer';
 
 const Comprar = () => {
+
     const footerRef = useRef(null);
-    const [numFuncionarios, setNumFuncionarios] = useState(0);
-    const [precoTotalAnual, setPrecoTotalAnual] = useState(0);
-    const navigate = useNavigate(); 
+    const [workers, setWorkers] = useState(0);
+    const [email, setEmail] = useState('');
+    const [name, setName] = useState('');
+    const [payment, setPayment] = useState(0);
+    const pricePerWorker = 25;
 
-    const precoPorFuncionario = 15;
-
-    
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
 
-    const handleNumFuncionariosChange = (e) => {
-        const numero = Math.max(0, e.target.value);
-        setNumFuncionarios(numero);
-        setPrecoTotalAnual(numero * precoPorFuncionario);
+    const handleWorkersChange = (e) => {
+        const number = Math.max(0, e.target.value);
+        setWorkers(number);
+        setPayment(number * pricePerWorker);
     };
 
-    const scrollToFooter = (e) => {
-        e.preventDefault(); 
-        footerRef.current.scrollIntoView({ behavior: 'smooth' });
+    const handleCheckout = async () => {
+        if (!email || !name || workers <= 0) {
+            alert("Por-favor preencha todos os campos.");
+            return;
+        }
+    
+        try {
+            const response = await fetch("http://localhost:8000/api/create-checkout-session", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ workers, email, name, payment }),
+            });
+    
+            if (!response.ok) {
+                const error = await response.text();
+                console.error("Server error:", error);
+                alert(`Error initiating payment: ${error}`);
+                return;
+            }
+    
+            const { url } = await response.json();
+    
+            if (url) {
+                window.location.href = url;
+            } else {
+                alert("Unexpected error. No URL returned from server.");
+            }
+        } catch (error) {
+            console.error("Checkout error:", error);
+            alert("Something went wrong. Please try again.");
+        }
     };
-
-    const irParaPagamentos = () => {
-        navigate('/pagar', { state: { numFuncionarios, precoTotalAnual } }); 
-    };
-
+    
     return (
         <div>
             <div className='header'>
@@ -39,43 +62,58 @@ const Comprar = () => {
                     <nav>
                         <ul>
                             <li>
-                                <a href="#" onClick={scrollToFooter}>Contactos</a>
+                                <a href="#footer" onClick={(e) => e.preventDefault()}>
+                                    Contactos
+                                </a>
                             </li>
                             <li>
                                 <a href="/login">Login</a>
                             </li>
                         </ul>
                     </nav>
-                </header> 
+                </header>
             </div>
-                <div className="container_">
-                    <div className="text_container">
-                        <h1>Conheça nossa oferta para sua empresa</h1>
-                    </div>
-                    <div className="box-container">
-                        <div className="input-preço">
-                            <input 
-                                type="number" 
-                                placeholder="Número de Funcionários" 
-                                value={numFuncionarios} 
-                                onChange={handleNumFuncionariosChange} 
+            <div className="container_">
+                <div className="text_container">
+                    <h1>Conheça nossa oferta para sua empresa</h1>
+                </div>
+                <div className="box-container">
+                        <div className="input-preço">  
+                            <input
+                                type="number"
+                                name="workers"
+                                placeholder="Número de Funcionários"
+                                value={workers}
+                                onChange={handleWorkersChange}
                                 min="0"
                             />
-                            <input 
-                                type="text" 
-                                placeholder="Preço total anual" 
-                                value={`€ ${precoTotalAnual}`} 
-                                readOnly  
+                            <input
+                                type="text"
+                                name="payment"
+                                placeholder="Preço total anual"
+                                value={`€ ${payment}`}
+                                readOnly
                             />
                         </div>
                         <div className="input-dados">
-                            <input type="email" placeholder="Email" />
-                            <input type="text" placeholder="Nome Empresa" />
+                            <input
+                                type="email"
+                                placeholder="Email"
+                                name="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                            <input
+                                type="text"
+                                placeholder="Nome Empresa"
+                                name="name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                            />
                         </div>
-                        <button onClick={irParaPagamentos}>Ir para pagamentos</button> 
-                    </div>
-                </div> 
-            
+                        <button onClick={handleCheckout}>Pagar</button>
+                </div>
+            </div>
             <Footer ref={footerRef} />
         </div>
     );

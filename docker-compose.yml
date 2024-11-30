@@ -3,6 +3,7 @@ services:
     build:
       context: backend
     container_name: back-end
+    restart: unless-stopped
     working_dir: /usr/src/app
     networks:
       - my_network
@@ -16,10 +17,28 @@ services:
     depends_on:
       - mysql_master
 
+  back-end2:
+    build:
+      context: backend
+    container_name: back-end2
+    working_dir: /usr/src/app
+    networks:
+      - my_network
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules/
+    tty: true
+    ports:
+      - "5001:5000"
+    command: npm run start
+    depends_on:
+      - mysql_master
+
   front-end:
     build:
       context: frontend
     container_name: front-end
+    restart: unless-stopped
     working_dir: /usr/src/app
     networks:
       - my_network
@@ -31,9 +50,25 @@ services:
       - "5173:5173"
     command: npm run dev
 
+  front-end2:
+    build:
+      context: frontend
+    container_name: front-end2
+    working_dir: /usr/src/app
+    networks:
+      - my_network
+    volumes:
+      - ./frontend:/usr/src/app
+      - /usr/src/app/node_modules/
+    tty: true
+    ports:
+      - "5175:5173"
+    command: npm run dev
+
   mysql_master:
     image: mysql:8.0
     container_name: mysql_master
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: serenaAI
@@ -75,7 +110,9 @@ services:
       - my_network
     depends_on:
       - back-end
+      - back-end2
       - front-end
+      - front-end2
 
 volumes:
   mysql_master_data:
@@ -83,3 +120,4 @@ volumes:
 
 networks:
   my_network:
+    driver: bridge

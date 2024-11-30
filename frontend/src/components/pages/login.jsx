@@ -5,21 +5,6 @@ import { useNavigate } from "react-router-dom";
 import "../css/Login.css";
 
 const Login = () => {
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const navigate = useNavigate(); 
-
-    const handleSubmit = (event) => {
-        event.preventDefault();
-
-        
-        if (username && password) { 
-            navigate("/chatbot"); 
-        } else {
-            alert("Por favor, insira um e-mail e senha válidos.");
-        }
-    };
-
     return (
         <>
             <Helmet>
@@ -27,21 +12,18 @@ const Login = () => {
             </Helmet>
             <div className="login-body">
                 <div className="container">
-                    <form onSubmit={handleSubmit}>
+                    <form action="">
                         <h1>SerenaAI</h1>
                         <div className="input-field">
-                            <input 
-                                type="email" 
-                                placeholder="E-mail" 
-                                onChange={(e) => setUsername(e.target.value)} 
-                            /> 
+                            <input type="email" name="email" placeholder="Email" required />
                             <FaUser className="icon" />
                         </div>
                         <div className="input-field">
-                            <input 
-                                type="password" 
-                                placeholder="Senha"
-                                onChange={(e) => setPassword(e.target.value)} 
+                            <input
+                                type="password"
+                                name="password"
+                                placeholder="Palavra-Passe"
+                                required
                             />
                             <FaLock className="icon" />
                         </div>

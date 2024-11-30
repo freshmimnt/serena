@@ -7,7 +7,6 @@ import Stripe from 'stripe';
 import OpenAI from "openai";
 import cors from 'cors';
 
-
 dotenv.config();
 
 const app = express();
@@ -16,13 +15,13 @@ const port = 3000;
 app.use(express.json());
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-const stripe = new Stripe(process.env.STRIPE_API_KEY, { apiVersion: '2024-11-08' });
+const stripe = new Stripe(process.env.STRIPE_API_KEY, { apiVersion: '2024-10-28.acacia' });
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
-app.use(cors());
+app.use(cors);
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
@@ -34,172 +33,86 @@ const pool = mysql.createPool({
 
 function generateRandomPassword(length = 10) {
     const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    return Array.from({ length }, () => chars[Math.floor(Math.random()     * chars.length)]).join('');
+    return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
 
-app.post('/addCompany', async (req, res) => {
+app.post("/api/create-checkout-session", async (req, res) => {
+    const { workers, email, name, payment } = req.body;
+
+    if (!workers || !email || !name || !payment) {
+        return res.status(400).send("Missing required fields.");
+    }
+
     try {
-        const { name, email, workers, amount_to_pay, purchase_date } = req.body;
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ["card"],
+            line_items: [
+                {
+                    price_data: {
+                        currency: "eur",
+                        product_data: {
+                            name: `Subscription for ${name}`,
+                        },
+                        unit_amount: payment * 100,
+                    },
+                    quantity: workers,
+                },
+            ],
+            customer_email: email,
+            mode: "payment",
+            success_url: "http://localhost:8000/sucesso",
+            cancel_url: "http://localhost:8000/cancelado",
+            metadata: { workers, email, name, payment },
+        });
 
-        const [companyResult] = await pool.query(
-            "INSERT INTO companies (name, email, workers, amount_to_pay, purchase_date) VALUES (?, ?, ?, ?, ?)",
-            [name, email, workers, amount_to_pay, purchase_date]
-        );
-
-        const randomPassword = generateRandomPassword();
-        const hashedPassword = await bcrypt.hash(randomPassword, 10);
-
-        await pool.query(
-            "INSERT INTO users (company_id, name, email, password, role) VALUES (?, ?, ?, ?, ?)",
-            [companyResult.insertId, name, email, hashedPassword, 'admin']
-        );
-
-        const msg = {
-            to: email,
-            from: 'serena.sistema@gmail.com', 
-            subject: 'Algo',
-            text: `Bem-vindo ${name}! A sua empresa. As suas credenciais:\n\nEmail: ${email}\nPassword: ${randomPassword}\n\nPor favor altere a sua password por motivos de segurança.`,
-        };
-        await sgMail.send(msg);
-
-        res.json({ message: 'Sucesso' });
-    } catch (err) {
-        console.error("Erro:", err);
-        res.status(500).send("Erro");
+        res.json({ url: session.url });
+    } catch (error) {
+        console.error("Error creating checkout session:", error);
+        res.status(500).send("Unable to initiate payment.");
     }
 });
 
-app.post('/addEmplyee', async (req, res) => {
+app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+
     try {
-        const {company_id, name, email} = req.body;
+        const event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
 
-        const randomPassword = generateRandomPassword();
-        const hashedPassword = await bcrypt.hash(randomPassword, 10);
+        if (event.type === 'checkout.session.completed') {
+            const session = event.data.object;
 
-        await pool.query(
-            "INSERT INTO users (company_id, name, email, password, role) VALUES (?, ?, ?, ?, ?)",
-            [company_id, name, email, hashedPassword, 'employee']
-        );
+            const { name, email, workers, payment } = session.metadata;
 
-        const msg = {
-            to: email,
-            from: 'serena.sistema@gmail.com', 
-            subject: 'Algo',
-            text: `Bem-vindo ${name}!. As suas credenciais:\n\nEmail: ${email}\nPassword: ${randomPassword}\n\nPor favor altere a sua password por motibos de segurança.`,
-        };
-        await sgMail.send(msg);
+            const purchase_date = new Date();
 
-        res.json({ message: 'Sucesso' });
-    } catch (err) {
-        console.error("Erro:", err);
-        res.status(500).send("Erro");
-    }
-});
+            const [companyResult] = await pool.query(
+                "INSERT INTO companies (name, email, workers, amount_to_pay, purchase_date) VALUES (?, ?, ?, ?, ?)",
+                [name, email, workers, payment, purchase_date]
+            );
 
-app.post('/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
+            const randomPassword = generateRandomPassword();
+            const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
-        const [userResult] = await pool.query(
-            "SELECT * FROM users WHERE email =?",
-            [email]
-        );
+            await pool.query(
+                "INSERT INTO users (company_id, name, email, password, role) VALUES (?, ?, ?, ?, ?)",
+                [companyResult.insertId, name, email, hashedPassword, 'admin']
+            );
 
-        if (!userResult.length) {
-            return res.status(401).send("Email ou password inválidos");
+            const msg = {
+                to: email,
+                from: 'serena.sistema@gmail.com',
+                subject: 'Welcome!',
+                text: `Welcome, ${name}!\n\nHere are your credentials:\nEmail: ${email}\nPassword: ${randomPassword}\n\nPlease change your password for security reasons.`,
+            };
+            await sgMail.send(msg);
         }
 
-        const user = userResult[0];
-        const match = await bcrypt.compare(password, user.password);
-
-        if (!match) {
-            return res.status(401).send("Email ou password inválidos");
-        }
-
-        res.json({ message: 'Sucesso', user });
+        res.status(200).send('Webhook received successfully.');
     } catch (err) {
-        console.error("Erro:", err);
-        res.status(500).send("Erro");
+        console.error("Webhook error:", err);
+        res.status(400).send(`Webhook Error: ${err.message}`);
     }
 });
-
-app.delete('/', async (req, res) => {
-    try {
-        const { user_id } = req.body; 
-
-        await pool.query(
-            "DELETE FROM users WHERE user_id = ?",
-            [user_id]
-        );
-        res.json({ message: 'Sucesso' });
-    } catch (err) {
-        console.error("Erro:", err);
-        res.status(500).send("Erro");
-    }
-});
-
-
-app.put('/', async (req, res) => {
-    try {
-        const { user_id, name, email } = req.body; 
-
-        await pool.query(
-            "UPDATE users SET name = ?, email = ? WHERE user_id = ?",
-            [name, email, user_id] 
-        );
-        res.json({ message: 'Sucesso' });
-    } catch (err) {
-        console.error("Erro:", err);
-        res.status(500).send("Erro");
-    }
-});
-
-app.get('/days-left', async (req, res) => {
-    try {
-        const company_id  = 1; 
-        const [rows] = await pool.query(`
-            SELECT 
-                name,
-                DATEDIFF(DATE_ADD(purchase_date, INTERVAL 1 YEAR), CURDATE()) AS days_left
-            FROM 
-                companies
-            WHERE 
-                company_id = ?
-        `, [company_id]);
-
-        if (rows.length > 0) {
-            res.json(rows[0]);
-        } else {
-            res.status(404).json({ message: "Company not found" });
-        }
-    } catch (err) {
-        console.error("Error fetching days left:", err);
-        res.status(500).send("Database query failed");
-    }
-});
-
-app.get('/numberOfEmployees', async (req, res) => {
-    try {
-        const company_id  = 1; 
-        const [rows] = await pool.query(`
-            SELECT 
-                COUNT(*) AS total_employees
-            FROM 
-                users
-            WHERE 
-                company_id =? and role = 
-        `, [company_id]);
-
-        if (rows.length > 0) {
-            res.json(rows[0]);
-        } else {
-            res.status(404).json({ message: "Company not found" });
-        }
-    } catch (err) {
-        console.error("Error fetching number of employees:", err);
-        res.status(500).send("Database query failed");
-    }
-})
 
 const detectarEmocao = (text) => {
     const keywords = {

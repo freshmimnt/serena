@@ -23,7 +23,7 @@ const Chatbot = () => {
         setMessages([...messages, newMessage]);
 
         try {
-            const response = await fetch("http://localhost:3000/api/call", {
+            const response = await fetch("http://localhost:8000/api/call", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -55,6 +55,7 @@ const Chatbot = () => {
     };
 
     return (
+        
         <div className="chatbot-wrapper">
             <div className="sidebar">
                 <h4>Menu de Atividades</h4>

@@ -44,7 +44,6 @@ const Demo = () => {
             </div>
 
             <div className='container_body'>
-                <input type="text" placeholder='Nome'/>
                 <input type="text" placeholder='Nome da Empresa'/>
                 <input type="email" placeholder='E-mail da Empresa'/>
                 <textarea className='mensagem' placeholder='Se deseja enviar alguma observação sobre sua demonstração digite aqui...'></textarea>                    
