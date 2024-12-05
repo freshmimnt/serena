@@ -13,6 +13,7 @@ const app = express();
 const port = 3000;
 
 app.use(express.json());
+app.use(cors());
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 const stripe = new Stripe(process.env.STRIPE_API_KEY, { apiVersion: '2024-10-28.acacia' });
@@ -20,8 +21,6 @@ const stripe = new Stripe(process.env.STRIPE_API_KEY, { apiVersion: '2024-10-28.
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
-
-app.use(cors);
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
@@ -114,6 +113,60 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
     }
 });
 
+app.post('/api/addEmplyee', async (req, res) => {
+  try {
+      const {company_id, name, email} = req.body;
+
+      const randomPassword = generateRandomPassword();
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+      await pool.query(
+          "INSERT INTO users (company_id, name, email, password, role) VALUES (?, ?, ?, ?, ?)",
+          [company_id, name, email, hashedPassword, 'employee']
+      );
+
+      const msg = {
+          to: email,
+          from: 'serena.sistema@gmail.com', 
+          subject: 'Bem-vindo',
+          text: `Bem-vindo ${name}!. As suas credenciais:\n\nEmail: ${email}\nPassword: ${randomPassword}\n\nPor favor altere a sua password por motivos de segurança.`,
+      };
+      await sgMail.send(msg);
+
+      res.json({ message: 'Sucesso' });
+  } catch (err) {
+      console.error("Erro:", err);
+      res.status(500).send("Erro");
+  }
+});
+
+app.post('/api/login', async (req, res) => {
+  try {
+      const { email, password } = req.body;
+
+      const [userResult] = await pool.query(
+          "SELECT * FROM users WHERE email =?",
+          [email]
+      );
+
+      if (!userResult.length) {
+          return res.status(401).send("Email ou password inválidos");
+      }
+
+      const user = userResult[0];
+      const match = await bcrypt.compare(password, user.password);
+
+      if (!match) {
+          return res.status(401).send("Email ou Password Inválidos");
+      }
+
+      res.json({ Status: 'Sucesso' });
+  } catch (err) {
+      console.error("Erro:", err);
+      res.status(500).send("Erro");
+  }
+});
+
 const detectarEmocao = (text) => {
     const keywords = {
       depressao: /triste|culpa|desanimado|desamparo|desesperança|baixa autoestima|ansiedade|irritabilidade/gi,
@@ -130,7 +183,7 @@ const detectarEmocao = (text) => {
       if (text.match(regex)) return emocao;
     }
     return 'neutro';
-  };
+};
   
   
   const gerarPromptEmpatico = (emocao, userInput) => {
@@ -194,7 +247,7 @@ const detectarEmocao = (text) => {
     };
   
     return prompts[emocao] || prompts.neutro;
-  };
+};
 
 app.post('/api/call', async (req, res) => {
     try {
@@ -220,7 +273,25 @@ app.post('/api/call', async (req, res) => {
     }
 });
 
+app.get('/api/days-left', async (req, res) => {
+  try {
+      const company_id  = 1; 
+      const [rows] = await pool.query(`
+          SELECT name, DATEDIFF(DATE_ADD(purchase_date, INTERVAL 1 YEAR), CURDATE()) AS days_left FROM companies WHERE company_id = ?
+      `, [company_id]);
 
+      if (rows.length > 0) {
+          res.json(rows[0]);
+      } else {
+          res.status(404).json({ message: "Company not found" });
+      }
+  } catch (err) {
+      console.error("Error fetching days left:", err);
+      res.status(500).send("Database query failed");
+  }
+});
+
+app.get('/', (req, res) => res.send('Hello World!'))
 
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);

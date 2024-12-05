@@ -39,7 +39,6 @@ const LandingPage = () => {
           </nav>
         </header>
       </div>
-
       <div className='home'>
         <div className='text-container'>
           <h1>SR</h1>

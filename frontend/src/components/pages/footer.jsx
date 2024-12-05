@@ -22,7 +22,7 @@ const Footer = forwardRef((props, ref) => {
                             <a href="/" target="_blank" rel="noopener noreferrer">Psiquiatria</a>
                         </li>
                         <li>
-                            <a href="/" target="_blank" rel="noopener noreferrer">Linha de Apoio</a>
+                            <a href="https://saudemental.min-saude.pt/linhas-de-crise/" target="_blank" rel="noopener noreferrer">Linha de Apoio</a>
                         </li>
                     </ul>
                 </div>
