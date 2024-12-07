@@ -2,14 +2,15 @@ services:
   back-end:
     build:
       context: backend
+      dockerfile: Dockerfile.dev
     container_name: back-end
     restart: unless-stopped
-    working_dir: /usr/src/app
+    working_dir: /app
     networks:
       - my_network
     volumes:
-      - ./backend:/usr/src/app
-      - /usr/src/app/node_modules
+      - ./backend:/app
+      #- /app/node_modules
     tty: true
     ports:
       - "3000:3000"
@@ -20,13 +21,15 @@ services:
   back-end2:
     build:
       context: backend
+      dockerfile: Dockerfile.dev
     container_name: back-end2
-    working_dir: /usr/src/app
+    restart: unless-stopped
+    working_dir: /app
     networks:
       - my_network
     volumes:
-      - ./backend:/usr/src/app
-      - /usr/src/app/node_modules/
+      - ./backend:/app
+      #- /app/node_modules/
     tty: true
     ports:
       - "3001:3000"
@@ -37,14 +40,15 @@ services:
   front-end:
     build:
       context: frontend
+      dockerfile: Dockerfile.dev
     container_name: front-end
     restart: unless-stopped
-    working_dir: /usr/src/app
+    working_dir: /app
     networks:
       - my_network
     volumes:
-      - ./frontend:/usr/src/app
-      - /usr/src/app/node_modules
+      - ./frontend:/app
+      #- /app/node_modules
     tty: true
     ports:
       - "5173:5173"
@@ -53,13 +57,15 @@ services:
   front-end2:
     build:
       context: frontend
+      dockerfile: Dockerfile.dev
     container_name: front-end2
-    working_dir: /usr/src/app
+    restart: unless-stopped
+    working_dir: /app
     networks:
       - my_network
     volumes:
-      - ./frontend:/usr/src/app
-      - /usr/src/app/node_modules/
+      - ./frontend:/app
+      #- /app/node_modules/
     tty: true
     ports:
       - "5174:5173"
@@ -85,6 +91,7 @@ services:
   mysql_replica:
     image: mysql:8.0
     container_name: mysql_replica
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: serenaAI
@@ -101,6 +108,7 @@ services:
   nginx:
     build:
       context: nginx
+      dockerfile: Dockerfile.dev
     container_name: nginx
     restart: always
     tty: true
