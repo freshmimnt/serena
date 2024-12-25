@@ -20,7 +20,7 @@ const LandingPage = () => {
       
       <div className='header'>
         <header className='header-content'>
-          <img src="src/assets/Logo.png" alt="Logo" />
+          <Link to="/" > <img src="src/assets/Logo.png" alt="Logo" /></Link>
           <nav>
             <ul>
               <li>

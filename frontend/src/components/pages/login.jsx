@@ -2,8 +2,7 @@ import { FaUser, FaLock } from "react-icons/fa"
 import { Helmet } from 'react-helmet-async'
 import { useState } from "react"
 import { useNavigate } from "react-router-dom";
-import Axios from "axios";
-
+import axios from "axios";
 import "../css/Login.css";
 
 const Login = () => {
@@ -19,7 +18,7 @@ const Login = () => {
         e.preventDefault();
 
         try {
-            const response = await Axios.post("http://localhost:8000/api/login", values);
+            const response = await axios.post("http://localhost:8000/api/login", values);
 
             if (response.status === 200) {
                 navigate("/");

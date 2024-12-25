@@ -6,6 +6,9 @@ import sgMail from '@sendgrid/mail';
 import Stripe from 'stripe';
 import OpenAI from "openai";
 import cors from 'cors';
+import jwt from 'jsonwebtoken';
+import cookieParser from 'cookie-parser';
+/*import cron from 'cron';*/
 
 dotenv.config();
 
@@ -14,6 +17,7 @@ const port = 3000;
 
 app.use(express.json());
 app.use(cors());
+app.use(cookieParser());
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 const stripe = new Stripe(process.env.STRIPE_API_KEY, { apiVersion: '2024-10-28.acacia' });
@@ -41,7 +45,6 @@ app.post("/api/create-checkout-session", async (req, res) => {
     if (!workers || !email || !name || !payment) {
         return res.status(400).send("Missing required fields.");
     }
-
     try {
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
@@ -52,7 +55,7 @@ app.post("/api/create-checkout-session", async (req, res) => {
                         product_data: {
                             name: `Subscription for ${name}`,
                         },
-                        unit_amount: payment * 100,
+                        unit_amount: 25 * 100,
                     },
                     quantity: workers,
                 },
@@ -113,6 +116,82 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
     }
 });
 
+app.post('/api/company', async (req, res) => {
+    try {
+        const { name, email, workers, payment} = req.body;
+
+        const purchase_date = new Date()
+
+        const [companyResult] = await pool.query(
+            "INSERT INTO companies (name, email, workers, payment, purchase_date) VALUES (?, ?, ?, ?, ?)",
+            [name, email, workers, payment, purchase_date]
+        );
+
+        const randomPassword = generateRandomPassword();
+        const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+        await pool.query(
+            "INSERT INTO users (company_id, name, email, password, role) VALUES (?, ?, ?, ?, ?)",
+            [companyResult.insertId, name, email, hashedPassword, 'admin']
+        );
+
+        const msg = {
+            to: email,
+            from: 'serena.sistema@gmail.com', 
+            subject: 'Algo',
+            text: `Bem-vindo/a ${name}!. As credenciais do seu administrador são:\n\nEmail: ${email}\nPassword: ${randomPassword}\n\nPor favor altere a sua password por motivos de segurança.`,
+        };
+        await sgMail.send(msg);
+
+        res.json({ message: 'Sucesso' });
+    } catch (err) {
+        console.error("Erro:", err);
+        res.status(500).send("Erro");
+    }
+});
+
+app.post('/api/request-demo', async (req, res) => {
+    try {
+        const { name, email } = req.body;
+
+        if (!name || !email) {
+            return res.status(400).send("Name and email are required.");
+        }
+
+        const demoExpiry = new Date();
+        demoExpiry.setDate(demoExpiry.getDate() + 3);
+
+        const [companyResult] = await pool.query(
+            "INSERT INTO companies (name, email, demo_company, demo_expiry) VALUES (?, ?, TRUE, ?)",
+            [name, email, demoExpiry]
+        );
+
+        const companyId = companyResult.insertId;
+
+        const password = generateRandomPassword();
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await pool.query(
+            "INSERT INTO users (company_id, name, email, password, role) VALUES (?, ?, ?, ?, 'employee')",
+            [companyId, name, email, hashedPassword]
+        );
+
+        const msg = {
+            to: email,
+            from: 'serena.sistema@gmail.com',
+            subject: 'Your Demo is Active',
+            text: `Hi ${name},\n\nYour demo is now active and will expire on ${demoExpiry.toDateString()}.\nHere are your login details:\nEmail: ${email}\nPassword: ${password}\n\nPlease log in to explore our system.\n\n- Serena Team`,
+        };
+
+        await sgMail.send(msg);
+        res.status(200).send("Demo activated successfully.");
+    } catch (err) {
+        console.error("Error activating demo:", err);
+        res.status(500).send("Internal server error.");
+    }
+});
+
+
 app.post('/api/addEmplyee', async (req, res) => {
   try {
       const {company_id, name, email} = req.body;
@@ -140,6 +219,8 @@ app.post('/api/addEmplyee', async (req, res) => {
   }
 });
 
+
+
 app.post('/api/login', async (req, res) => {
   try {
       const { email, password } = req.body;
@@ -159,13 +240,19 @@ app.post('/api/login', async (req, res) => {
       if (!match) {
           return res.status(401).send("Email ou Password Inválidos");
       }
-
+      /*const token = jwt.sign({ id: user.id, role: user.role, company_id: user.company_id }, process.env.SECRET_KEY, { expiresIn: '1h' });
+      res.cookie('token', token, { httpOnly: true });*/
       res.json({ Status: 'Sucesso' });
   } catch (err) {
       console.error("Erro:", err);
       res.status(500).send("Erro");
   }
 });
+
+/*app.get('/api/logout', function(req, res) => {
+    res.clearCookie('token', { path: '/' });
+    res.send('Logged out');
+});*/
 
 const detectarEmocao = (text) => {
     const keywords = {
@@ -273,27 +360,9 @@ app.post('/api/call', async (req, res) => {
     }
 });
 
-app.get('/api/days-left', async (req, res) => {
-  try {
-      const company_id  = 1; 
-      const [rows] = await pool.query(`
-          SELECT name, DATEDIFF(DATE_ADD(purchase_date, INTERVAL 1 YEAR), CURDATE()) AS days_left FROM companies WHERE company_id = ?
-      `, [company_id]);
-
-      if (rows.length > 0) {
-          res.json(rows[0]);
-      } else {
-          res.status(404).json({ message: "Company not found" });
-      }
-  } catch (err) {
-      console.error("Error fetching days left:", err);
-      res.status(500).send("Database query failed");
-  }
-});
-
-app.get('/', (req, res) => res.send('Hello World!'))
-
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
 });
+
+
 
