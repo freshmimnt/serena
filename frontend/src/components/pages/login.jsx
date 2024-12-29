@@ -14,6 +14,8 @@ const Login = () => {
 
     const navigate = useNavigate();
 
+    axios.defaults.withCredentials = true;
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -21,7 +23,11 @@ const Login = () => {
             const response = await axios.post("http://localhost:8000/api/login", values);
 
             if (response.status === 200) {
-                navigate("/");
+                const { redirectTo } = response.data;
+                
+                if (redirectTo) {
+                    navigate(redirectTo); 
+                }
             } else {
                 alert("Email ou password inválidos");
             }
@@ -41,7 +47,8 @@ const Login = () => {
                     <h1>SerenaAI</h1>
                     <form onSubmit={handleSubmit}>
                         <div className="input-field">
-                            <input type="email" 
+                            <input 
+                            type="email" 
                             name="email" 
                             placeholder="Email" 
                             required 
@@ -52,7 +59,7 @@ const Login = () => {
                             <input
                                 type="password"
                                 name="password"
-                                placeholder="Palavra-Passe"
+                                placeholder="Password"
                                 required
                                 onChange={e => setValues({...values, password: e.target.value})}
                             />

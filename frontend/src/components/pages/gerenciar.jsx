@@ -58,13 +58,11 @@ const Gerenciar = () => {
                         </ul>
                     </nav>
                 </div>
-
                 <div className="col-md-9 geren-container p-4">
                     <h2>Gerenciar Funcionário</h2>
                     <p>
                         Bem-vindo à área de gerenciamento de funcionários. Aqui você pode visualizar todos os funcionários registrados, editar informações existentes ou remover acessos quando necessário.
                     </p>
-
                     <div className="geren-input-container mt-4">
                         <form onSubmit={handleSubmit} className="form-inline">
                             <div className="input-group">
@@ -83,7 +81,6 @@ const Gerenciar = () => {
                             </div>
                         </form>
                     </div>
-
                     {filteredEmployees.length > 0 && (
                         <div className="mt-4">
                             <h4>Resultados da Pesquisa:</h4>

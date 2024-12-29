@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "../css/adminSettings.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FaUser, FaEnvelope, FaCalendarAlt, FaUsers } from "react-icons/fa";
 import { Helmet } from 'react-helmet-async'
+import axios from "axios";
 
 const AdminSettings = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [employeeCount, setEmployeeCount] = useState(25); 
+  const [employeeCount, setEmployeeCount] = useState(""); 
+  const [daysLeft, setDaysLeft] = useState(""); 
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -17,6 +19,32 @@ const AdminSettings = () => {
     setEmail("");
     setPassword("");
   };
+
+  const handleLogout = () => {
+    axios.get("http://localhost:8000/api/logout")
+      .then(() => {
+        window.location.href = "/";
+      })
+      .catch((error) => {
+        console.error("Logout error:", error);
+      });
+  };  
+
+  useEffect (() => {
+    axios.get("http://localhost:8000/api/numberOfEmployees", { withCredentials: true })
+    .then((response) =>{
+      setEmployeeCount(response.data.employeeCount);
+    })
+    .catch((error) => console.error('Error fetching user details:', error))
+  }, [])
+
+  useEffect (() => {
+    axios.get("http://localhost:8000/api/daysLeft", { withCredentials: true })
+    .then((response) =>{
+      setDaysLeft(response.data.daysLeft);
+    })
+    .catch((error) => console.error('Error fetching user details:', error))
+  }, [])
 
   return (
     <div className="setting-wrapper container-fluid">
@@ -46,7 +74,7 @@ const AdminSettings = () => {
 
           <div className="info-section mt-4">
             <h5><FaCalendarAlt /> Expiração da Licença:</h5>
-            <p>31 de Dezembro de 2025</p>
+            <p>{daysLeft}</p>
 
             <h5><FaUsers /> Funcionários Registrados:</h5>
             <p>{employeeCount}</p>
@@ -56,7 +84,7 @@ const AdminSettings = () => {
             <h4>Editar Perfil</h4>
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
-                <label className="form-label">Nome</label>
+                <label className="form-label">Email</label>
                 <div className="input-group">
                   <span className="input-group-text"><FaUser /></span>
                   <input
@@ -70,7 +98,7 @@ const AdminSettings = () => {
               </div>
 
               <div className="mb-3">
-                <label className="form-label">E-mail</label>
+                <label className="form-label">Password</label>
                 <div className="input-group">
                   <span className="input-group-text"><FaEnvelope /></span>
                   <input
@@ -84,6 +112,10 @@ const AdminSettings = () => {
               </div>
               <button type="submit" className="settings btn btn-primary">
                 Atualizar Informações
+              </button>
+              <p></p>
+              <button onClick={handleLogout} className="settings btn btn-primary">
+                Encerrar sessão
               </button>
             </form>
           </div>

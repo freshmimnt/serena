@@ -4,25 +4,32 @@ import "../css/admin.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FaUser, FaEnvelope } from "react-icons/fa";
 import { Helmet } from 'react-helmet-async'
+import axios from "axios";
 
 const Admin = () => {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
 
-  const handleSubmit = (e) => {
+  const [values, setValues] = useState({
+    name: "",
+    email: "",      
+  })
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!username || !email) {
-      alert("Por favor, preencha todos os campos.");
-      return;
+    try{
+      const response = await axios.post("http://localhost:8000/api/addEmployee", { name: values.name, email: values.email }, { withCredentials: true })
+        if (response.status == 200){
+          alert("Colaborador Adicionado")
+      }else{
+        alert("Não foi possível adicionar o colaborador")
+      }
+    }catch (error) {
+      console.error("Login error:", error);
+      if (error.response && error.response.status === 400) {
+          alert("Validation error: Please check your input fields.");
+      } else {
+          alert("An error occurred. Please try again later.");
+      }
     }
-
-    console.log("Submitted:", { username, email });
-    alert(`Funcionário ${username} foi adicionado com sucesso!`);
-
-    // Reset form
-    setUsername("");
-    setEmail("");
   };
 
   return (
@@ -70,8 +77,7 @@ const Admin = () => {
                   type="text"
                   className="form-control"
                   placeholder="Nome"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={e => setValues({...values, name: e.target.value})}
                   aria-label="Nome"
                   required
                 />
@@ -85,13 +91,11 @@ const Admin = () => {
                   type="email"
                   className="form-control"
                   placeholder="E-mail"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setValues({...values, email: e.target.value})}
                   aria-label="E-mail"
                   required
                 />
               </div>
-
               <button type="submit" className="btn btn-primary w-100">
                 Adicionar
               </button>

@@ -71,6 +71,17 @@ services:
       - "5174:5173"
     command: npm run dev
 
+  flask-chatbot:
+    build:
+      context: chatbot
+      dockerfile: Dockerfile.dev
+    container_name: flask-chatbot
+    restart: unless-stopped
+    networks:
+      - my_network
+    ports:
+      - "5000:5000"
+
   mysql_master:
     image: mysql:8.0
     container_name: mysql_master

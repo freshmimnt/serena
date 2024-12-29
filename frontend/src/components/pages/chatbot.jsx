@@ -1,14 +1,18 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FiSettings } from 'react-icons/fi';
 import { FaTimes } from 'react-icons/fa';
 import "../css/Chatbot.css";
 import "bootstrap/dist/css/bootstrap.min.css"; 
+import axios from "axios";
 
 
 const Chatbot = () => {
 
-
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [oldPassword, setOldPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -16,44 +20,40 @@ const Chatbot = () => {
     const toggleModal = () => {
         setIsModalOpen(!isModalOpen);
     };
-
     
     const sendMessage = async () => {
-        if (!input.trim()) return;
-
-        const newMessage = { sender: "user", text: input };
-        setMessages([...messages, newMessage]);
-
-        try {
-            const response = await fetch("http://localhost:8000/api/call", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ prompt: input }),
-            });
-
-            const data = await response.text();
-            const botMessage = { sender: "bot", text: data };
-
-            setMessages((prevMessages) => [...prevMessages, botMessage]);
-        } catch (error) {
-            console.error("Erro ao enviar a mensagem:", error);
-            setMessages((prevMessages) => [
-                ...prevMessages,
-                { sender: "bot", text: "Erro ao gerar resposta. Tente novamente mais tarde." }
-            ]);
-        }
-
-        setInput(""); 
+        axios.post("http://localhost:8000/api/chatbot")
     };
 
- 
-    const handleKeyPress = (e) => {
-        if (e.key === "Enter") {
-            e.preventDefault(); 
-            sendMessage();
-        }
+    useEffect (() => {
+        axios.get("http://localhost:8000/api/verifyUser", { withCredentials: true })
+        .then((response) => {
+            setName(response.data.name);
+            setEmail(response.data.email);
+        })
+        .catch((error) => console.error('Error fetching user details:', error));
+    }, []);
+
+    const handleLogout = () => {
+        axios.get("http://localhost:8000/api/logout")
+        .then(() => {
+            window.location.href = "/";
+        })
+        .catch((error) => {
+            console.error("Logout error:", error);
+        });
+    };  
+
+    const handleChangePassword = (e) => {
+        e.preventDefault();
+        axios.post("http://localhost:8000/api/changePassword", { oldPassword, newPassword }, { withCredentials: true })
+            .then(() => {
+                alert("Senha alterada com sucesso");
+            })
+           .catch((error) => {
+            console.error("Change password error:", error);
+            alert("Não foi possível alterar a senha. Tente novamente mais tarde.");
+        })
     };
 
     return (
@@ -77,7 +77,7 @@ const Chatbot = () => {
 
             <div className="chatbot-container">
                 <img src="public/Sigla.png" />
-                <h1>Olá, sou sua terapeuta, sinta-se à vontade para compartilhar o que estiver em sua mente, seja o que for.</h1>
+                <h1>Olá {name}, sou sua terapeuta, sinta-se à vontade para compartilhar o que estiver em sua mente, seja o que for.</h1>
                 <div className="chat-display">
                     {messages.map((msg, index) => (
                         <div key={index} className={`message ${msg.sender}`}>
@@ -108,17 +108,32 @@ const Chatbot = () => {
                         </div>
                         <div className="modal-section">
                             <h3>Autenticação de Dois Fatores (2FA)</h3>
-                            <p>Requer um desafio extra de segurança ao iniciar sessão.</p>
+                            <p>Adicionar uma camada extra de segurança ao iniciar sessão.</p>
                             <button onClick={() => alert("2FA ativado/desativado")}>Ativar/Desativar 2FA</button>
                         </div>
-                        <div className="modal-section">
+                        <form onSubmit={handleChangePassword}>
+                            <div className="modal-section">
                             <h3>Mudar Senha</h3>
-                            <input type="password" placeholder="Digite nova senha" />
-                            <button onClick={() => alert("Senha alterada")}>Mudar Senha</button>
+                            <input type="password" 
+                            value={oldPassword} 
+                            onChange={(e) => setOldPassword(e.target.value)} 
+                            placeholder="Antiga senha" />
+                            <input type="password" 
+                            value={newPassword} onChange={(e) => 
+                            setNewPassword(e.target.value)} 
+                            placeholder="Nova senha" />
+                            <p></p>
+                            <button type="submit">Mudar Senha</button>
+                        </div>
+                        </form>
+
+                        <div className="modal-section">
+                            <h3>Encerrar Sessão</h3>
+                            <button onClick={handleLogout}>Logout</button>
                         </div>
                         <div className="modal-section">
                             <h3>Seu Email</h3>
-                            <p>funcionario@gmail.com</p>
+                            <p>{email}</p>
                         </div>
                     </div>
                 </div>

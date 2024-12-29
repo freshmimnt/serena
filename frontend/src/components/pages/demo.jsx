@@ -27,9 +27,9 @@ const Demo = () => {
         e.preventDefault();
     
         try {
-            const response = await axios.post("http://localhost:8000/api/request-demo", values);
+            const response = await axios.post("http://localhost:8000/api/requestDemo", values);
     
-            if (response.status === 200) {
+            if (response.status == 200) {
                 alert("Pedido com sucesso");
                 navigate("/");
             } else {
