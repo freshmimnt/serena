@@ -22,9 +22,27 @@ const Chatbot = () => {
     };
     
     const sendMessage = async () => {
-        axios.post("http://localhost:8000/api/chatbot")
+        if (!input.trim()) return;
+    
+        const userMessage = { sender: 'user', text: input };
+        setMessages([...messages, userMessage]);
+    
+        try {
+            const response = await axios.post('http://localhost:8000/api/chatbot', {
+                message: input,
+                state: chatbotState
+            }, { withCredentials: true });
+    
+            const { botResponse, nextState } = response.data;
+            setMessages(prev => [...prev, { sender: 'bot', text: botResponse }]);
+            setChatbotState(nextState);
+        } catch (error) {
+            console.error("Error sending message:", error);
+        }
+    
+        setInput('');
     };
-
+    
     useEffect (() => {
         axios.get("http://localhost:8000/api/verifyUser", { withCredentials: true })
         .then((response) => {

@@ -4,39 +4,58 @@ import "../css/gerenciar.css";
 import "bootstrap/dist/css/bootstrap.min.css"; 
 import { FaUser } from "react-icons/fa";
 import { Helmet } from 'react-helmet-async'
+import axios from "axios";
 
 const Gerenciar = () => {
-    const [username, setUsername] = useState("");
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
     const [employee, setEmployee] = useState(null);
     const [filteredEmployees, setFilteredEmployees] = useState([]);
     const [showModal, setShowModal] = useState(false);
 
-    const employees = [
-        { name: "João Silva", email: "joao@example.com", department: "TI", role: "Desenvolvedor", status: "Ativo" },
-        { name: "Maria Oliveira", email: "maria@example.com", department: "Recursos Humanos", role: "Gerente", status: "Inativo" },
-        { name: "João Santos", email: "joaosantos@example.com", department: "Vendas", role: "Representante", status: "Ativo" },
-    ];
-
     const handleSubmit = (e) => {
         e.preventDefault();
-        const matches = employees.filter((emp) =>
-            emp.name.toLowerCase().startsWith(username.toLowerCase())
-        );
-        if (matches.length > 0) {
-            setFilteredEmployees(matches);
-        } else {
-            alert(`Nenhum funcionário encontrado com o nome: ${username}`);
-        }
+        axios.post("http://localhost:8000/api/searchEmployees", {name}, {withCredentials: true})
+        setFilteredEmployees(response.data)
+        .then(() => {
+            alert("User encontrado");
+        })
+       .catch((error) => {
+        console.error("Change password error:", error);
+        alert("Não foi possível alterar a senha. Tente novamente mais tarde.");
+        })
     };
 
-    const handleSelectEmployee = (selectedEmployee) => {
-        setEmployee(selectedEmployee);
+    const handleSelectEmployee = (employee) => {
+        setEmployee(employee);
         setShowModal(true);
     };
 
-    const handleSave = () => {
-        alert(`Informações de ${employee.name} foram atualizadas com sucesso!`);
-        setShowModal(false);
+    const handleSave = async () => {
+        try {
+            const updatePayload = {
+                userId: employee.user_id,
+                ...(employee.name !== filteredEmployees.find(e => e.user_id === employee.user_id).name && { name: employee.name }),
+                ...(employee.email !== filteredEmployees.find(e => e.user_id === employee.user_id).email && { email: employee.email }),
+            };
+
+            if (!Object.keys(updatePayload).length) {
+                alert('No changes to save.');
+                return;
+            }
+
+            await axios.post(
+                "http://localhost:8000/api/updateEmployee",
+                updatePayload,
+                { withCredentials: true }
+            );
+
+            alert("Informações atualizadas com sucesso");
+            setShowModal(false); 
+        } catch (error) {
+            console.error("Error updating employee:", error);
+            alert("Erro ao atualizar funcionário. Tente novamente.");
+        }
     };
 
     return (
@@ -61,7 +80,7 @@ const Gerenciar = () => {
                 <div className="col-md-9 geren-container p-4">
                     <h2>Gerenciar Funcionário</h2>
                     <p>
-                        Bem-vindo à área de gerenciamento de funcionários. Aqui você pode visualizar todos os funcionários registrados, editar informações existentes ou remover acessos quando necessário.
+                        Bem-vindo à área de gerenciamento de funcionários. Aqui você pode visualizar todos os funcionários registrados, editar as suas informações e remover os funcionários quando necessário.
                     </p>
                     <div className="geren-input-container mt-4">
                         <form onSubmit={handleSubmit} className="form-inline">
@@ -71,8 +90,8 @@ const Gerenciar = () => {
                                     type="text"
                                     className="form-control"
                                     placeholder="Nome"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
                                     required
                                 />
                                 <button type="submit" className="btn btn-primary">
@@ -91,6 +110,7 @@ const Gerenciar = () => {
                                         className="list-group-item d-flex justify-content-between align-items-center"
                                     >
                                         {emp.name}
+                                        {emp.email}
                                         <button
                                             className="btn btn-sm btn-outline-primary"
                                             onClick={() => handleSelectEmployee(emp)}
@@ -102,7 +122,6 @@ const Gerenciar = () => {
                             </ul>
                         </div>
                     )}
-
                     {showModal && (
                         <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
                             <div className="modal-dialog">

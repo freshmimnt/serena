@@ -7,19 +7,35 @@ import { Helmet } from 'react-helmet-async'
 import axios from "axios";
 
 const AdminSettings = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [employeeCount, setEmployeeCount] = useState(""); 
   const [daysLeft, setDaysLeft] = useState(""); 
 
-  const handleSubmit = (e) => {
+  const handleChangePassword = (e) => {
     e.preventDefault();
-    console.log("Updated Profile:", { email, password });
-    alert(`Informações do administrador foram atualizadas com sucesso!`);
-    setEmail("");
-    setPassword("");
-  };
-
+    axios.post("http://localhost:8000/api/changeCompanyPassword", { oldPassword, newPassword }, { withCredentials: true })
+      .then(() => {
+        alert("Senha alterada com sucesso");
+      })
+      .catch((error) => {
+        console.error("Change password error:", error);
+        alert("Não foi possível alterar a senha. Tente novamente mais tarde.");
+        })
+    };
+    const handleChangeEmail = (e) => {
+      e.preventDefault();
+      axios.post("http://localhost:8000/api/changeCompanyEmail", { newEmail }, { withCredentials: true })
+        .then(() => {
+          alert("Email alterado com sucesso");
+        })
+        .catch((error) => {
+          console.error("Change email error:", error);
+          alert("Não foi possível alterar o email. Tente novamente mais tarde.");
+          })
+      };
+  
   const handleLogout = () => {
     axios.get("http://localhost:8000/api/logout")
       .then(() => {
@@ -82,42 +98,59 @@ const AdminSettings = () => {
 
           <div className="setting-input-container mt-5">
             <h4>Editar Perfil</h4>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleChangeEmail}>
+              <h5>Email</h5>
               <div className="mb-3">
-                <label className="form-label">Email</label>
                 <div className="input-group">
                   <span className="input-group-text"><FaUser /></span>
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Introduza o seu novo newEmail"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
                   />
                 </div>
               </div>
-
+              <button type="submit" className="settings btn btn-primary">
+                Atualizar Email
+              </button>
+            </form>
+            <hr />  
+            <form onSubmit={handleChangePassword}>
+              <h5>Password</h5>
               <div className="mb-3">
-                <label className="form-label">Password</label>
                 <div className="input-group">
                   <span className="input-group-text"><FaEnvelope /></span>
                   <input
                     type="password"
                     className="form-control"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Antiga Password"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="mb-3">
+                <div className="input-group">
+                  <span className="input-group-text"><FaEnvelope /></span>
+                  <input
+                    type="password"
+                    className="form-control"
+                    placeholder="Nova password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
                   />
                 </div>
               </div>
               <button type="submit" className="settings btn btn-primary">
-                Atualizar Informações
+                Atualizar Password
               </button>
-              <p></p>
+            </form>
+              <hr />
               <button onClick={handleLogout} className="settings btn btn-primary">
                 Encerrar sessão
               </button>
-            </form>
           </div>
         </div>
       </div>
