@@ -8,7 +8,7 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
 import cron from 'node-cron';
-
+import axios from 'axios';
 
 dotenv.config();
 
@@ -46,13 +46,34 @@ app.post('/api/chatbot', async (req, res) => {
     try{
         const token = req.cookies.token;
         if (!token) {
-            return res.status(401).send('Not authenticated');
+            return res.status(401).send('Não é um usuario autenticado');
         }
 
         const decoded = jwt.verify(token, process.env.SECRET_KEY);
         const userId = decoded.id;
 
-        
+        const { message, state } = req.body; 
+
+        const [stateRows] = await pool.query(
+            "SELECT state FROM chatbots WHERE user_id = ? ORDER BY created_at DESC LIMIT 1",
+            [userId]
+        );
+        const currentState = state || (stateRows.length > 0 ? stateRows[0].state : "inicio");
+
+        const flaskResponse = await axios.post(
+            'http://flask-chatbot:5000/chat',
+            { message, state: currentState }
+        );
+
+        const { response: botResponse, state: nextState } = flaskResponse.data;
+
+        await pool.query(
+            "INSERT INTO chatbots (user_id, input, response, state) VALUES (?, ?, ?, ?)",
+            [userId, message, botResponse, nextState]
+        );
+
+        res.json({ botResponse, nextState });
+
 
     }catch (error) {
         console.error("Error handling chatbot request:", error);
@@ -60,11 +81,27 @@ app.post('/api/chatbot', async (req, res) => {
     }
 });
 
+app.delete("/api/deleteChat", async (req, res) => {
+    try{
+        const token = req.cookies.token;
+        if (!token) {
+            return res.status(401).send('Não é um usuario autenticado');
+        }
+    
+        const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        const userId = decoded.id;
+    
+        await pool.query("DELETE FROM chatbots WHERE user_id =?", [userId]);
+    }catch{
+        console.error("Erro ao apagar as conversas:", error);
+    }
+});
+
 app.post("/api/create-checkout-session", async (req, res) => {
     const { workers, email, name, payment } = req.body;
 
     if (!workers || !email || !name || !payment) {
-        return res.status(400).send("Missing required fields.");
+        return res.status(400).send("Preencha todos os campos");
     }
 
     try {
@@ -94,7 +131,8 @@ app.post("/api/create-checkout-session", async (req, res) => {
     }
 });
 
-app.post('/api/paymentSuccess', async (req, res) => {
+app.post('/api/payment-success', async (req, res) => {
+    const connection = await pool.getConnection(); 
     try {
         const { name, email, workers, payment } = req.body;
 
@@ -104,15 +142,26 @@ app.post('/api/paymentSuccess', async (req, res) => {
 
         const purchase_date = new Date();
 
-        const [companyResult] = await pool.query(
-            "INSERT INTO companies (name, email, workers, payment, purchase_date, demo_company) VALUES (?, ?, ?, ?, ?, FALSE)",
+        await connection.beginTransaction(); 
+
+        const [existingCompany] = await connection.query(
+            "SELECT company_id FROM companies WHERE email = ? FOR UPDATE", 
+            [email]
+        );
+
+        if (existingCompany.length > 0) {
+            await connection.rollback(); 
+            return res.status(409).send("Company already registered."); 
+        }
+
+        const [companyResult] = await connection.query(
+            "INSERT INTO companies (name, email, workers, payment, purchase_date) VALUES (?, ?, ?, ?, ?)",
             [name, email, workers, payment, purchase_date]
         );
 
         const randomPassword = generateRandomPassword();
         const hashedPassword = await bcrypt.hash(randomPassword, 10);
-
-        await pool.query(
+        await connection.query(
             "INSERT INTO users (company_id, name, email, password, role) VALUES (?, ?, ?, ?, ?)",
             [companyResult.insertId, name, email, hashedPassword, 'admin']
         );
@@ -125,45 +174,14 @@ app.post('/api/paymentSuccess', async (req, res) => {
         };
         await sgMail.send(msg);
 
-        res.status(200).send("Company and admin user created successfully.");
+        await connection.commit(); 
+        res.status(201).send("Company and admin user created successfully.");
     } catch (err) {
+        await connection.rollback(); 
         console.error("Error processing payment success:", err);
         res.status(500).send("Internal server error.");
-    }
-});
-
-
-app.post('/api/company', async (req, res) => {
-    try {
-        const { name, email, workers, payment} = req.body;
-
-        const purchase_date = new Date()
-
-        const [companyResult] = await pool.query(
-            "INSERT INTO companies (name, email, workers, payment, purchase_date) VALUES (?, ?, ?, ?, ?)",
-            [name, email, workers, payment, purchase_date]
-        );
-
-        const randomPassword = generateRandomPassword();
-        const hashedPassword = await bcrypt.hash(randomPassword, 10);
-
-        await pool.query(
-            "INSERT INTO users (company_id, name, email, password, role) VALUES (?, ?, ?, ?, ?)",
-            [companyResult.insertId, name, email, hashedPassword, 'admin']
-        );
-
-        const msg = {
-            to: email,
-            from: 'serena.sistema@gmail.com', 
-            subject: 'Algo',
-            text: `Bem-vindo/a ${name}!. As credenciais do seu administrador são:\n\nEmail: ${email}\nPassword: ${randomPassword}\n\nPor favor altere a sua password por motivos de segurança.`,
-        };
-        await sgMail.send(msg);
-
-        res.json({ message: 'Sucesso' });
-    } catch (err) {
-        console.error("Erro:", err);
-        res.status(500).send("Erro");
+    } finally {
+        connection.release(); 
     }
 });
 
@@ -397,9 +415,47 @@ app.get('/api/verifyUser', async (req, res) => {
     }
 });
 
-app.post("/api/changeCompanyData", async (req, res) => {
+app.post("/api/changeCompanyEmail", async (req, res) => {
+    try {
+        const { newEmail } = req.body;
+
+        if (!newEmail) {
+            return res.status(400).send('New email is required');
+        }
+
+        const token = req.cookies.token;
+        if (!token) {
+            return res.status(401).send('Not authenticated');
+        }
+
+        const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        const company_id = decoded.id; 
+
+        const [companyResult] = await pool.query("SELECT * FROM users WHERE company_id = ?", [company_id]);
+
+        if (!companyResult.length) {
+            return res.status(404).send("Company not found");
+        }
+
+        await pool.query("START TRANSACTION");
+
+        await pool.query("UPDATE companies SET email = ? WHERE company_id = ?", [newEmail, company_id]);
+
+        await pool.query("UPDATE users SET email = ? WHERE company_id = ? AND role = 'admin'", [newEmail, company_id]);
+
+        await pool.query("COMMIT");
+
+        res.status(200).send("Email updated successfully for company and admin user");
+    } catch (err) {
+        console.error("Error updating emails:", err);
+        await pool.query("ROLLBACK");
+        res.status(500).send("Internal server error");
+    }
+});
+
+app.post("/api/changeCompanyPassword", async (req, res) => {
     try{
-        const {email, oldPassword, newPassword} = req.body;
+        const {oldPassword, newPassword} = req.body;
 
         const token = req.cookies.token;
         if (!token) {
@@ -409,8 +465,7 @@ app.post("/api/changeCompanyData", async (req, res) => {
         const decoded = jwt.verify(token, process.env.SECRET_KEY);
         const company_id = decoded.id;
 
-        
-        const [userResult] = await pool.query("SELECT password FROM companies WHERE company_id = ?", [company_id]);
+        const [userResult] = await pool.query("SELECT password FROM users WHERE company_id = ? AND role = 'admin'", [company_id]);
         if (!userResult.length) {
             return res.status(404).send("User not found");
         }
@@ -427,8 +482,8 @@ app.post("/api/changeCompanyData", async (req, res) => {
         }
 
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-        await pool.query("UPDATE users SET email = ?, password = ? WHERE company_id = ?", [email, hashedNewPassword, company_id]);
-        res.send('Password and email changed successfully');
+        await pool.query("UPDATE users SET password = ? WHERE company_id = ? AND role = 'admin'", [hashedNewPassword, company_id]);
+        res.send('Password changed successfully');
     } catch (err) {
     console.error("Error changing password:", err);
     res.status(500).send("Internal server error");
@@ -492,7 +547,111 @@ app.get('/api/daysLeft', async (req, res) => {
         res.status(500).send("Database query failed");
     }
 });
-  
+
+app.post('/api/searchEmployees', async (req, res) => {
+    try {
+        const { name } = req.body;
+
+        const token = req.cookies.token;
+        if (!token) {
+            return res.status(401).send('Not authenticated');
+        }
+    
+        const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        const company_id = decoded.company_id;
+
+        const [employees] = await pool.query(
+            "SELECT user_id, name, email FROM users WHERE name LIKE ? AND company_id = ?",
+            [`%${name}%`, company_id]
+        );
+
+        if (!employees.length) {
+            return res.status(404).send("User not found");
+        }
+
+        res.json(employees);
+    } catch (err) {
+        console.error("Error fetching employees:", err);
+        res.status(500).send("Internal server error");
+    }
+});
+
+app.post('/api/updateEmployee', async (req, res) => {
+    try {
+        const { userId, name, email } = req.body;
+
+        if (!userId || (!name && !email)) {
+            return res.status(400).send('User ID and at least one of name or email are required.');
+        }
+
+        const token = req.cookies.token;
+        if (!token) {
+            return res.status(401).send('Not authenticated');
+        }
+
+        const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        const company_id = decoded.company_id;
+
+        let query = '';
+        const queryParams = [];
+
+        if (name) {
+            query = 'UPDATE users SET name = ? WHERE user_id = ? AND company_id = ?';
+            queryParams.push(name, userId, company_id);
+        } else if (email) {
+            query = 'UPDATE users SET email = ? WHERE user_id = ? AND company_id = ?';
+            queryParams.push(email, userId, company_id);
+        }
+
+        const [result] = await pool.query(query, queryParams);
+
+        if (result.affectedRows > 0) {
+            res.status(200).send('Employee information updated successfully.');
+        } else {
+            res.status(404).send('User not found or no changes made.');
+        }
+    } catch (err) {
+        console.error('Error updating employee:', err);
+        res.status(500).send('Internal server error');
+    }
+});
+
+app.post('/api/recuperarSenha', async (req, res) => {
+    const { email } = req.body;
+
+    // verifica se o email exsite na bd
+    const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+
+    if (rows.length === 0) {
+        return res.status(404).send({ message: "E-mail não encontrado!" });
+    }
+
+    const recoveryLink = 'http://localhost:8000/api/redefinirSenha/${email}'; 
+    try {
+        // aqui vai enviar o email com o link de recuperação
+        const msg = {
+            to: email,
+            from: "serena.sistema@gmail.com",
+            subject: "Recuperação de Senha",
+            text: `<p>Clique no link abaixo para redefinir sua senha:</p><a href='${recoveryLink}'>Redefinir Senha</a>`,
+        };
+
+        await sgMail.send(msg);
+        res.status(200).send({ message: "E-mail de recuperação enviado!" });
+    } catch (err) {
+        console.error("Erro ao enviar e-mail:", err);
+        res.status(500).send({ message: "Erro ao enviar e-mail." });
+    }
+});
+
+app.post('/api/redefinirSenha', async (req, res) => {
+    const { email, newPassword } = req.body;
+
+    await pool.query("UPDATE users SET password = ? WHERE email = ?", [newPassword, email]);
+
+    res.status(200).send({ message: "Senha redefinida com sucesso!" });
+});
+
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
 });
