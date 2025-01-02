@@ -13,30 +13,33 @@ const Sucesso = () => {
     const payment = params.get("payment");
 
     useEffect(() => {
-        if (!name || !email || !workers || !payment) {
-            console.error("Missing parameters in the URL.");
-            return;
-        }
-
         const registerCompany = async () => {
             try {
-                await axios.post("http://localhost:8000/api/paymentSuccess", {
-                    name,
-                    email,
-                    workers,
-                    payment,
-                });
-
-                alert("A empresa foi registrada com sucesso.");
+                const response = await axios.post(
+                    "http://localhost:8000/api/payment-success",
+                    { name, email, workers, payment },
+                    { withCredentials: true }
+                );
+    
+                if (response.status === 201) {
+                    alert("A empresa foi registrada com sucesso.");
+                }
             } catch (error) {
-                console.error("Erro ao registrar empresa:", error);
-                alert("Houve um problema ao registrar a empresa. Entre em contato com o suporte.");
+                if (error.response?.status === 409) {
+                    alert("A empresa já foi registrada anteriormente.");
+                } else {
+                    console.error("Erro ao registrar empresa:", error);
+                    alert("Houve um problema ao registrar a empresa. Entre em contato com o suporte.");
+                }
                 navigate("/");
             }
         };
-
+    
         registerCompany();
     }, [name, email, workers, payment, navigate]);
+    
+    
+
 
     return (
         <div className="sucesso-container">

@@ -26,7 +26,7 @@ const AdminSettings = () => {
     };
     const handleChangeEmail = (e) => {
       e.preventDefault();
-      axios.post("http://localhost:8000/api/changeCompanyEmail", { newEmail }, { withCredentials: true })
+      axios.post("http://localhost:8000/api/changeCompanyEmail", { newEmail }, { withCredentials: true })  
         .then(() => {
           alert("Email alterado com sucesso");
         })

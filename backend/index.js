@@ -432,6 +432,7 @@ app.post("/api/changeCompanyEmail", async (req, res) => {
         const company_id = decoded.id; 
 
         const [companyResult] = await pool.query("SELECT * FROM companies WHERE company_id = ? AND role 'admin'", [company_id]);
+    
         if (!companyResult.length) {
             return res.status(404).send("Company not found");
         }
