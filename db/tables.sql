@@ -6,7 +6,8 @@ create TABLE companies(
 	payment INT,
     purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	demo_company BOOLEAN DEFAULT FALSE NOT NULL,
-    demo_expiry DATE DEFAULT NULL
+    demo_expiry DATE DEFAULT NULL,
+    UNIQUE (email)
 );
 
 CREATE TABLE users (
@@ -17,7 +18,8 @@ CREATE TABLE users (
 	password VARCHAR(255) NOT NULL,
 	role ENUM('admin', 'employee') NOT NULL, 
     FOREIGN KEY (company_id) REFERENCES companies(company_id) ON DELETE CASCADE,
-	INDEX(company_id)
+	INDEX(company_id),
+    UNIQUE (email)
 );
 
 CREATE TABLE chatbots (

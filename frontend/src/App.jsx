@@ -11,6 +11,10 @@ import Cancelado from './components/pages/cancelado';
 import Admin from './components/pages/admin';
 import AdminSettings from './components/pages/settings';
 import Gerenciar from './components/pages/gerenciar';
+import RedefinirSenha from './components/pages/redefinirSenha';
+import RecuperarSenha from './components/pages/recuperarSenha';
+import Mindfulness from './components/pages/mindfulness';
+import Respiracao from './components/pages/respiracao'; 
 
 function App() {
   return (
@@ -27,6 +31,10 @@ function App() {
           <Route path="/admin" element={<Admin />} />
           <Route path="/settings" element={<AdminSettings />} />
           <Route path="/gerenciar" element={<Gerenciar />} />
+          <Route path="/redefinirSenha" element={<RedefinirSenha />} />
+          <Route path="/recuperarSenha" element={<RecuperarSenha />} />
+          <Route path="/mindfulness" element={<Mindfulness />} />
+          <Route path="/respiracao" element={<Respiracao />} />
         </Routes>
       </Router>
     </HelmetProvider>
