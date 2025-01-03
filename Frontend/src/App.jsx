@@ -8,6 +8,8 @@ import Pagar from './Components/Pagar/Pagar';
 import Chatbot from './Components/Chatbot/Chatbot';
 import Respiracao from './Components/Respiracao/Respiracao';
 import Mindfulness from './Components/Mindfulness/Mindfulness';
+import Cancelado from './Components/Cancelado/Cancelado';
+import Sucesso from './Components/Cancelado/Sucesso';
 
 
 function App() {
@@ -22,8 +24,9 @@ function App() {
         <Route path='/chatbot' element={<Chatbot/>}/>
         <Route path='/respiracao' element={<Respiracao/>}/>
         <Route path='/mindfulness' element={<Mindfulness/>}></Route>
-        
-
+        <Route path='/cancelado' element={<Cancelado/>}></Route>
+        <Route path='/sucesso' element={<Sucesso/>}></Route>
+       
       </Routes>
     </Router>
   );

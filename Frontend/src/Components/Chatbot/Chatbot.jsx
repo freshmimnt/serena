@@ -9,6 +9,7 @@ const Chatbot = () => {
     const [messages, setMessages] = useState([]); 
     const [input, setInput] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [showPasswordReminder, setShowPasswordReminder]= useState(false);
     const lastMessageRef = useRef(null); 
 
     const toggleModal = () => {
@@ -51,7 +52,19 @@ const Chatbot = () => {
             sendMessage();
         }
     };
+// aqui começa o lembrete da mudança da senha 
+    useEffect(() => {
+        const reminderShow = localStorage.getItem("passwordReminderShown");
+        if (!reminderShow){
+            setShowPasswordReminder(true);
+        }
+    }, []);
 
+    const handleDismissReminder = () => {
+        setShowPasswordReminder(false);
+        localStorage.setItem("passwordReminderShown", "true");
+    };
+//aqui terminou o lembrete da mudança da senha
    
     useEffect(() => {
         if (lastMessageRef.current) {
@@ -61,6 +74,12 @@ const Chatbot = () => {
 
     return (
         <div className="chatbot-wrapper">
+            {showPasswordReminder && (
+                <div className="password-reminder">
+                    <p>Por segurança, recomendamos alterar sua senha o mais breve possível.</p>
+                    <button onClick={handleDismissReminder}>Entendido</button>
+                </div>
+            )}
             <div className="sidebar">
                 <h4>Menu de Atividades</h4>
                 <nav>

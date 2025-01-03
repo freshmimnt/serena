@@ -1,8 +1,7 @@
-// Login.js
 import { FaUser, FaLock } from "react-icons/fa";
 import { Helmet } from "react-helmet-async";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 import "./Login.css";
 
 const Login = () => {
@@ -13,7 +12,6 @@ const Login = () => {
     const handleSubmit = (event) => {
         event.preventDefault();
 
-        
         if (username && password) { 
             navigate("/chatbot"); 
         } else {
@@ -36,16 +34,15 @@ const Login = () => {
                                 placeholder="E-mail" 
                                 onChange={(e) => setUsername(e.target.value)} 
                             /> 
-                            <FaUser className="icon" />
-                        </div>
-                        <div className="input-field">
-                            <input 
-                                type="password" 
+                            
+                        
+                           <input 
+                                type="password"
                                 placeholder="Senha"
                                 onChange={(e) => setPassword(e.target.value)} 
-                            />
-                            <FaLock className="icon" />
+                            />                     
                         </div>
+                        
                         <div className="esqueceu">
                             <a href="#">Esqueceu a senha?</a>
                         </div>
@@ -55,6 +52,6 @@ const Login = () => {
             </div>
         </>
     );
-};
+}; 
 
 export default Login;

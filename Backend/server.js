@@ -1,8 +1,6 @@
 import mysql from 'mysql2';
-
 import express from 'express';
 import dotenv from 'dotenv';
-
 import sgMail from '@sendgrid/mail';
 import Stripe from 'stripe';
 import OpenAI from "openai";
@@ -37,8 +35,6 @@ function generateRandomPassword(length = 10) {
     const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     return Array.from({ length }, () => chars[Math.floor(Math.random()     * chars.length)]).join('');
 }
-
-
 
 
 app.delete('/', async (req, res) => {
@@ -225,7 +221,9 @@ app.post('/api/call', async (req, res) => {
     }
 });
 
-
+//app.post('/api/conversas', async (req, res) ={
+    
+//})
 
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
