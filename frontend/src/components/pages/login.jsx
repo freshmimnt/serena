@@ -66,7 +66,7 @@ const Login = () => {
                             <FaLock className="icon" />
                         </div>
                         <div className="esqueceu">
-                            <a href="#">Esqueceu a senha?</a>
+                            <a href="/recuperarSenha">Esqueceu a senha?</a>
                         </div>
                         <button type="submit">Entrar</button>
                     </form>

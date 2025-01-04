@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { FiSettings } from 'react-icons/fi';
 import { FaTimes } from 'react-icons/fa';
@@ -17,6 +17,9 @@ const Chatbot = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [chatbotState, setChatbotState] = useState("inicio");
     const [loading, setLoading] = useState(false);
+    const [showPasswordReminder, setShowPasswordReminder]= useState(false);
+    const lastMessageRef = useRef(null); 
+    /*const [Auth, SetAuth] = useState*/
 
     const toggleModal = () => {
         setIsModalOpen(!isModalOpen);
@@ -106,10 +109,17 @@ const Chatbot = () => {
         setShowPasswordReminder(false);
         localStorage.setItem("passwordReminderShown", "true");
     };
+//aqui terminou o lembrete da mudança da senha
+   
+    useEffect(() => {
+        if (lastMessageRef.current) {
+            lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [messages]);
 
     return ( 
         <div className="chatbot-wrapper">
-             {showPasswordReminder && (
+            {showPasswordReminder && (
                 <div className="password-reminder">
                     <p>Por segurança, recomendamos alterar sua senha o mais breve possível.</p>
                     <button onClick={handleDismissReminder}>Entendido</button>

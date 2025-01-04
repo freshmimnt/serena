@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import "../css/admin.css";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -12,6 +12,8 @@ const Admin = () => {
     name: "",
     email: "",      
   })
+  const [showPasswordReminder, setShowPasswordReminder]= useState(false);
+  const lastMessageRef = useRef(null); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,6 +33,25 @@ const Admin = () => {
       }
     }
   };
+
+  useEffect(() => {
+    const reminderShow = localStorage.getItem("passwordReminderShown");
+    if (!reminderShow){
+        setShowPasswordReminder(true);
+    }
+}, []);
+
+const handleDismissReminder = () => {
+    setShowPasswordReminder(false);
+    localStorage.setItem("passwordReminderShown", "true");
+};
+//aqui terminou o lembrete da mudança da senha
+
+useEffect(() => {
+    if (lastMessageRef.current) {
+        lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+}, [messages]);
 
   return (
     <div className="admin-wrapper container-fluid">
@@ -57,7 +78,12 @@ const Admin = () => {
             </ul>
           </nav>
         </div>
-
+          {showPasswordReminder && (
+            <div className="password-reminder">
+            <p>Por segurança, recomendamos alterar sua senha o mais breve possível.</p>
+            <button onClick={handleDismissReminder}>Entendido</button>
+            </div>
+          )}
         <div className="admin-container">
           <h2>Adicionar Funcionário</h2>
           <p>

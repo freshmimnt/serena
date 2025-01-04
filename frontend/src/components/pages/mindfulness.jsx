@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./Mindfulness.css";
+import "../css/mindfulness.css";
 
 const Mindfulness = () => {
     const [etapa, setEtapa] = useState(0);

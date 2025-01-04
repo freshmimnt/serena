@@ -561,7 +561,7 @@ app.post('/api/searchEmployees', async (req, res) => {
         const company_id = decoded.company_id;
 
         const [employees] = await pool.query(
-            "SELECT user_id, name, email FROM users WHERE name LIKE ? AND company_id = ?",
+            "SELECT user_id, name, email FROM users WHERE name LIKE ? AND company_id = ? AND role = 'employee'",
             [`%${name}%`, company_id]
         );
 
@@ -576,11 +576,12 @@ app.post('/api/searchEmployees', async (req, res) => {
     }
 });
 
-app.post('/api/updateEmployee', async (req, res) => {
-    try {
-        const { userId, name, email } = req.body;
+app.post('/api/changeEmployeesName', async (req, res) => {
+    try{
 
-        if (!userId || (!name && !email)) {
+        const { userId, name} = req.body;
+
+        if (!userId || !name ) {
             return res.status(400).send('User ID and at least one of name or email are required.');
         }
 
@@ -592,48 +593,88 @@ app.post('/api/updateEmployee', async (req, res) => {
         const decoded = jwt.verify(token, process.env.SECRET_KEY);
         const company_id = decoded.company_id;
 
-        let query = '';
-        const queryParams = [];
+        await pool.query("UPDATE users SET name = ? WHERE user_id = ? AND company_id = ?  AND role = 'employee'", [name, userId, company_id]);
 
-        if (name) {
-            query = 'UPDATE users SET name = ? WHERE user_id = ? AND company_id = ?';
-            queryParams.push(name, userId, company_id);
-        } else if (email) {
-            query = 'UPDATE users SET email = ? WHERE user_id = ? AND company_id = ?';
-            queryParams.push(email, userId, company_id);
-        }
-
-        const [result] = await pool.query(query, queryParams);
-
-        if (result.affectedRows > 0) {
-            res.status(200).send('Employee information updated successfully.');
-        } else {
-            res.status(404).send('User not found or no changes made.');
-        }
-    } catch (err) {
+    }catch{
         console.error('Error updating employee:', err);
         res.status(500).send('Internal server error');
+    }
+
+});
+
+app.post('/api/changeEmployeesEmail', async (req, res) => {
+    try{
+
+        const { userId, email} = req.body;
+
+        if (!userId || !email ) {
+            return res.status(400).send('User ID and at least one of name or email are required.');
+        }
+
+        const token = req.cookies.token;
+        if (!token) {
+            return res.status(401).send('Not authenticated');
+        }
+
+        const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        const company_id = decoded.company_id;
+
+        await pool.query("UPDATE users SET email = ? WHERE user_id = ? AND company_id = ? AND role = 'employee'", [email, userId, company_id]);
+
+    }catch{
+        console.error('Error updating employee:', err);
+        res.status(500).send('Internal server error');
+    }
+
+});
+
+app.delete('/api/deleteEmployee', async (req, res) => {
+    try {
+        const token = req.cookies.token;
+        if (!token) {
+            return res.status(401).send('Not authenticated');
+        }
+
+        const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        const company_id = decoded.company_id;
+        const { userId } = req.body;
+
+        if (!userId) {
+            return res.status(400).send('User ID is required');
+        }
+
+        const [result] = await pool.query(
+            "DELETE FROM users WHERE user_id = ? AND company_id = ? AND role = 'employee'",
+            [userId, company_id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).send("Employee not found or not part of this company.");
+        }
+
+        res.status(200).send("Employee deleted successfully.");
+    } catch (err) {
+        console.error("Error deleting employee:", err);
+        res.status(500).send("Internal server error.");
     }
 });
 
 app.post('/api/recuperarSenha', async (req, res) => {
     const { email } = req.body;
 
-    // verifica se o email exsite na bd
     const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
 
     if (rows.length === 0) {
         return res.status(404).send({ message: "E-mail não encontrado!" });
     }
 
-    const recoveryLink = 'http://localhost:8000/api/redefinirSenha/${email}'; 
+    const recoveryLink = `http://localhost:8000/redefinirSenha/${encodeURIComponent(email)}`;
     try {
-        // aqui vai enviar o email com o link de recuperação
         const msg = {
             to: email,
             from: "serena.sistema@gmail.com",
             subject: "Recuperação de Senha",
-            text: `<p>Clique no link abaixo para redefinir sua senha:</p><a href='${recoveryLink}'>Redefinir Senha</a>`,
+            html: `<p>Clique no link abaixo para redefinir sua senha:</p><a href='${recoveryLink}'>Redefinir Senha</a>`,
         };
 
         await sgMail.send(msg);
@@ -647,10 +688,12 @@ app.post('/api/recuperarSenha', async (req, res) => {
 app.post('/api/redefinirSenha', async (req, res) => {
     const { email, newPassword } = req.body;
 
-    await pool.query("UPDATE users SET password = ? WHERE email = ?", [newPassword, email]);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await pool.query("UPDATE users SET password = ? WHERE email = ?", [hashedPassword, email]);
 
     res.status(200).send({ message: "Senha redefinida com sucesso!" });
 });
+
 
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);

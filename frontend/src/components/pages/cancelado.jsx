@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async'
-import "../css/Temp.css"; 
+import "../css/Stripe.css"; 
 const Cancelado = () => (
     <>
         <Helmet>

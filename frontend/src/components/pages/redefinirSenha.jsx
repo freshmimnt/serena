@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import axios from "axios";
 
-const RedefinirSenha = ({ match }) => {
-    const { email } = match.params;
+const RedefinirSenha = () => {
+    const { email } = useParams();
     const [newPassword, setNewPassword] = useState("");
     const [message, setMessage] = useState("");
 

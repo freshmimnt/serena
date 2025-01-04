@@ -32,11 +32,37 @@ const Gerenciar = () => {
         setShowModal(true);
     };
 
-    const handleSave = async () => {
+    const handleChangeEmployeesName = async () => {
+    
         try {
             const updatePayload = {
                 userId: employee.user_id,
                 ...(employee.name !== filteredEmployees.find(e => e.user_id === employee.user_id).name && { name: employee.name }),
+            };
+
+            if (!Object.keys(updatePayload).length) {
+                alert('No changes to save.');
+                return;
+            }
+            await axios.post(
+                "http://localhost:8000/api/changeEmployeesName",
+                updatePayload,
+                { withCredentials: true }
+            );
+            alert("Nome atualizado com sucesso");
+            setShowModal(false); 
+        } catch (error) {
+            console.error("Error updating employee:", error);
+            alert("Erro ao atualizar funcionário. Tente novamente.");
+        }
+
+    }
+
+    const handleChangeEmployeesEmail = async () => {
+    
+        try {
+            const updatePayload = {
+                userId: employee.user_id,
                 ...(employee.email !== filteredEmployees.find(e => e.user_id === employee.user_id).email && { email: employee.email }),
             };
 
@@ -44,21 +70,39 @@ const Gerenciar = () => {
                 alert('No changes to save.');
                 return;
             }
-
             await axios.post(
-                "http://localhost:8000/api/updateEmployee",
+                "http://localhost:8000/api/changeEmployeesEmail",
                 updatePayload,
                 { withCredentials: true }
             );
-
-            alert("Informações atualizadas com sucesso");
+            alert("Email atualizado com sucesso");
             setShowModal(false); 
         } catch (error) {
             console.error("Error updating employee:", error);
             alert("Erro ao atualizar funcionário. Tente novamente.");
         }
-    };
 
+    }
+
+    const handleDeleteEmployee = async (userId) => {
+        if (!window.confirm("Are you sure you want to delete this employee?")) {
+            return;
+        }
+    
+        try {
+            await axios.delete("http://localhost:8000/api/deleteEmployee", {
+                data: { userId },
+                withCredentials: true,
+            });
+    
+            alert("Employee deleted successfully.");
+            setFilteredEmployees((prev) => prev.filter((emp) => emp.user_id !== userId));
+        } catch (error) {
+            console.error("Error deleting employee:", error);
+            alert("Error deleting employee. Please try again.");
+        }
+    };
+    
     return (
         <div className="geren-wrapper container fluid">
             <div className="row">
@@ -110,13 +154,16 @@ const Gerenciar = () => {
                                         key={index}
                                         className="list-group-item d-flex justify-content-between align-items-center"
                                     >
-                                        {emp.name}
-                                        {emp.email}
+                                        {emp.name} - {emp.email}
                                         <button
                                             className="btn btn-sm btn-outline-primary"
-                                            onClick={() => handleSelectEmployee(emp)}
-                                        >
+                                            onClick={() => handleSelectEmployee(emp)}>
                                             Editar
+                                        </button>
+                                        <button
+                                            className="btn btn-sm btn-outline-danger" 
+                                            onClick={() => handleDeleteEmployee(emp.user_id)}>
+                                            Excluir
                                         </button>
                                     </li>
                                 ))}
@@ -131,31 +178,37 @@ const Gerenciar = () => {
                                         <h5 className="modal-title">Editar Funcionário</h5>
                                     </div>
                                     <div className="modal-body">
-                                        <form>
+                                        <form onSubmit={handleChangeEmployeesName}>
                                             <div className="mb-3">
                                                 <label className="form-label">Nome</label>
                                                 <input
                                                     type="text"
                                                     className="form-control"
                                                     value={employee.name}
+                                                    placeholder = "Novo Nome"
                                                     onChange={(e) => setEmployee({ ...employee, name: e.target.value })}
                                                 />
                                             </div>
+                                            <button type="submit" className="btn btn-primary">
+                                                Salvar
+                                            </button>
+                                        </form >  
+                                        <hr />
+                                        <form onSubmit={handleChangeEmployeesEmail}>
                                             <div className="mb-3">
                                                 <label className="form-label">Email</label>
                                                 <input
                                                     type="email"
                                                     className="form-control"
                                                     value={employee.email}
+                                                    placeholder = "Novo Email"
                                                     onChange={(e) => setEmployee({ ...employee, email: e.target.value })}
                                                 />
                                             </div>
+                                            <button type="submit" className="btn btn-primary">
+                                                Salvar
+                                            </button>
                                         </form>
-                                    </div>
-                                    <div className="modal-footer">
-                                        <button type="button" className="btn btn-primary" onClick={handleSave}>
-                                            Salvar
-                                        </button>
                                     </div>
                                 </div>
                             </div>

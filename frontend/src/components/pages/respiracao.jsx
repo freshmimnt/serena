@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./Respiracao.css";
+import "../css/respiracao.css";
 
 const Respiracao = () => {
     const [fase, setFase] = useState("Inspire");

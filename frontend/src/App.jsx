@@ -31,7 +31,7 @@ function App() {
           <Route path="/admin" element={<Admin />} />
           <Route path="/settings" element={<AdminSettings />} />
           <Route path="/gerenciar" element={<Gerenciar />} />
-          <Route path="/redefinirSenha" element={<RedefinirSenha />} />
+          <Route path="/redefinirSenha/:email" element={<RedefinirSenha />} />
           <Route path="/recuperarSenha" element={<RecuperarSenha />} />
           <Route path="/mindfulness" element={<Mindfulness />} />
           <Route path="/respiracao" element={<Respiracao />} />
