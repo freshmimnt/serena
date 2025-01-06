@@ -674,7 +674,7 @@ app.post('/api/recuperarSenha', async (req, res) => {
             to: email,
             from: "serena.sistema@gmail.com",
             subject: "Recuperação de Senha",
-            html: `<p>Clique no link abaixo para redefinir sua senha:</p><a href='${recoveryLink}'>Redefinir Senha</a>`,
+            html: `Clique no link abaixo para redefinir sua senha:'${recoveryLink}'`,
         };
 
         await sgMail.send(msg);
