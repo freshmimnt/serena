@@ -3,4 +3,3 @@ matplotlib
 networkx
 requests
 jsonify
-openai

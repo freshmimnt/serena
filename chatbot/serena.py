@@ -1,14 +1,12 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 import random
-import openai
-import os
+
 from flask import Flask, request, jsonify
 
 
 # Configuração do servidor Flask
 app = Flask(__name__)
-openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # Definição dos estados e mensagens
 states = {
@@ -297,7 +295,6 @@ transitions = {
     }
 }
 
-
 # Histórico detalhado
 history = []
 
@@ -320,21 +317,6 @@ def empathy_response(sentiment, response):
         response = response
     return response
 
-#Funçao openai
-def generate_openai_response(user_input):
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4o-mini",  
-            messages=[
-                {"role": "system", "content": "You are a helpful and empathetic chatbot."},
-                {"role": "user", "content": user_input}
-            ]
-        )
-        return response.choices[0].message['content']
-    except Exception as e:
-        return f"Ocorreu um erro ao tentar gerar uma resposta: {str(e)}"
-
-
 @app.route('/chat', methods=['POST'])
 def chat():
     data = request.json
@@ -350,10 +332,7 @@ def chat():
     if next_state == "final":
         response = random.choice(states["final"])
     else:
-        if next_state in ["ansioso", "triste", "autoestima", "depressao", "stress"]:
-            response = generate_openai_response(user_input)
-        else:
-            response = random.choice(states[next_state])
+        response = random.choice(states[next_state])
 
         response = empathy_response(sentiment, response)
 

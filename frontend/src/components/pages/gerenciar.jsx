@@ -155,16 +155,19 @@ const Gerenciar = () => {
                                         className="list-group-item d-flex justify-content-between align-items-center"
                                     >
                                         {emp.name} - {emp.email}
-                                        <button
-                                            className="btn btn-sm btn-outline-primary"
-                                            onClick={() => handleSelectEmployee(emp)}>
-                                            Editar
-                                        </button>
-                                        <button
-                                            className="btn btn-sm btn-outline-danger" 
-                                            onClick={() => handleDeleteEmployee(emp.user_id)}>
-                                            Excluir
-                                        </button>
+                                        <div className="d-flex gap-1">
+                                            <button
+                                                className="btn btn-sm btn-outline-primary px-2 py-1"
+                                                onClick={() => handleSelectEmployee(emp)}>
+                                                Editar
+                                            </button>
+                                            <button
+                                                className="btn btn-sm btn-outline-danger px-2 py-1"
+                                                onClick={() => handleDeleteEmployee(emp.user_id)}>
+                                                Excluir
+                                            </button>
+                                        </div>
+
                                     </li>
                                 ))}
                             </ul>
@@ -176,6 +179,12 @@ const Gerenciar = () => {
                                 <div className="modal-content">
                                     <div className="modal-header">
                                         <h5 className="modal-title">Editar Funcionário</h5>
+                                        <button
+                                            type="button"
+                                            className="btn-close"
+                                            aria-label="Close"
+                                            onClick={() => setShowModal(false)}
+                                        ></button>
                                     </div>
                                     <div className="modal-body">
                                         <form onSubmit={handleChangeEmployeesName}>
@@ -185,14 +194,14 @@ const Gerenciar = () => {
                                                     type="text"
                                                     className="form-control"
                                                     value={employee.name}
-                                                    placeholder = "Novo Nome"
+                                                    placeholder="Novo Nome"
                                                     onChange={(e) => setEmployee({ ...employee, name: e.target.value })}
                                                 />
                                             </div>
                                             <button type="submit" className="btn btn-primary">
                                                 Salvar
                                             </button>
-                                        </form >  
+                                        </form>
                                         <hr />
                                         <form onSubmit={handleChangeEmployeesEmail}>
                                             <div className="mb-3">
@@ -201,7 +210,7 @@ const Gerenciar = () => {
                                                     type="email"
                                                     className="form-control"
                                                     value={employee.email}
-                                                    placeholder = "Novo Email"
+                                                    placeholder="Novo Email"
                                                     onChange={(e) => setEmployee({ ...employee, email: e.target.value })}
                                                 />
                                             </div>
@@ -210,10 +219,13 @@ const Gerenciar = () => {
                                             </button>
                                         </form>
                                     </div>
+                                    
                                 </div>
                             </div>
                         </div>
                     )}
+
+                    
                 </div>
             </div>
         </div>
