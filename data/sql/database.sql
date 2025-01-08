@@ -1,3 +1,7 @@
+CREATE USER 'replica_user'@'%' IDENTIFIED BY 'replica_password';
+GRANT REPLICATION SLAVE ON *.* TO 'replica_user'@'%';
+FLUSH PRIVILEGES;
+
 create TABLE companies(
 	company_id INT AUTO_INCREMENT PRIMARY KEY,
 	name VARCHAR(255) NOT NULL,

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../css/admin.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FaUser, FaEnvelope } from "react-icons/fa";
@@ -8,12 +8,27 @@ import axios from "axios";
 
 const Admin = () => {
 
+  const navigate = useNavigate(); 
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [values, setValues] = useState({
     name: "",
     email: "",      
   })
-  const [showPasswordReminder, setShowPasswordReminder]= useState(false);
-  const lastMessageRef = useRef(null); 
+
+  useEffect(() => {
+    const verifyToken = async () => {
+      try {
+        const response = await axios.get("http://localhost:8000/api/verifyToken", { withCredentials: true });
+        if (response.data.authenticated) {
+          setIsAuthenticated(true); 
+        }
+      } catch (error) {
+        console.error("Token verification failed:", error);
+        navigate("/login"); 
+      }
+    };
+    verifyToken();
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,24 +49,9 @@ const Admin = () => {
     }
   };
 
-  useEffect(() => {
-    const reminderShow = localStorage.getItem("passwordReminderShown");
-    if (!reminderShow){
-        setShowPasswordReminder(true);
-    }
-}, []);
-
-const handleDismissReminder = () => {
-    setShowPasswordReminder(false);
-    localStorage.setItem("passwordReminderShown", "true");
-};
-//aqui terminou o lembrete da mudança da senha
-
-useEffect(() => {
-    if (lastMessageRef.current) {
-        lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-}, [messages]);
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="admin-wrapper container-fluid">
@@ -78,12 +78,6 @@ useEffect(() => {
             </ul>
           </nav>
         </div>
-          {showPasswordReminder && (
-            <div className="password-reminder">
-            <p>Por segurança, recomendamos alterar sua senha o mais breve possível.</p>
-            <button onClick={handleDismissReminder}>Entendido</button>
-            </div>
-          )}
         <div className="admin-container">
           <h2>Adicionar Funcionário</h2>
           <p>

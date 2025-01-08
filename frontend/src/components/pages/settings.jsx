@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "../css/adminSettings.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FaUser, FaEnvelope, FaCalendarAlt, FaUsers } from "react-icons/fa";
@@ -7,11 +7,29 @@ import { Helmet } from 'react-helmet-async'
 import axios from "axios";
 
 const AdminSettings = () => {
+  const navigate = useNavigate(); 
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [employeeCount, setEmployeeCount] = useState(""); 
   const [daysLeft, setDaysLeft] = useState(""); 
+
+
+  useEffect(() => {
+    const verifyToken = async () => {
+      try {
+        const response = await axios.get("http://localhost:8000/api/verifyToken", { withCredentials: true });
+        if (response.data.authenticated) {
+          setIsAuthenticated(true); 
+        }
+      } catch (error) {
+        console.error("Token verification failed:", error);
+        navigate("/login"); 
+      }
+    };
+    verifyToken();
+  }, [navigate]);
 
   const handleChangePassword = (e) => {
     e.preventDefault();
@@ -61,6 +79,10 @@ const AdminSettings = () => {
     })
     .catch((error) => console.error('Error fetching user details:', error))
   }, [])
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="setting-wrapper container-fluid">

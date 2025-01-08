@@ -11,33 +11,36 @@ const Sucesso = () => {
     const email = params.get("email");
     const workers = params.get("workers");
     const payment = params.get("payment");
-    const runOnce = useRef(false)
 
     useEffect(() => {
-        if(runOnce.current === false){
-            const registerCompany = async () => {
-
-                try {
-                    const response = await axios.post(
-                        "http://localhost:8000/api/payment-success",
-                        { name, email, workers, payment },
-                        { withCredentials: true }
-                    );
-                
-                } catch (error) {
-                    if (error.response?.status === 409) {
-                        alert("A empresa já foi registrada anteriormente.");
-                    } else {
-                        console.error("Erro ao registrar empresa:", error);
-                        alert("Houve um problema ao registrar a empresa. Entre em contato com o suporte.");
-                    }
+        const registerCompany = async () => {
+            try {
+                const response = await axios.post(
+                    "http://localhost:8000/api/payment-success",
+                    { name, email, workers, payment },
+                    { withCredentials: true }
+                );
+    
+                if (response.status === 201) {
+                    alert("A empresa foi registrada com sucesso.");
                 }
-            };
-            registerCompany();
-        }
-        return () => runOnce.current = true
+            } catch (error) {
+                if (error.response?.status === 409) {
+                    alert("A empresa já foi registrada anteriormente.");
+                } else {
+                    console.error("Erro ao registrar empresa:", error);
+                    alert("Houve um problema ao registrar a empresa. Entre em contato com o suporte.");
+                }
+                navigate("/");
+            }
+        };
+    
+        registerCompany();
     }, [name, email, workers, payment, navigate]);
     
+    
+
+
     return (
         <div className="sucesso-container">
             <div className="sucesso-box">

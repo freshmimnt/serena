@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
+import { Link } from 'react-router-dom'; 
 import "../css/Comprar.css";
 import Footer from './footer';
 
@@ -58,7 +59,7 @@ const Comprar = () => {
         <div>
             <div className='header'>
                 <header className='header-content'>
-                    <img src="src/assets/Logo.png" alt="Logo" />
+                    <Link to="/" > <img src="src/assets/Logo.png" alt="Logo" /></Link>
                     <nav>
                         <ul>
                             <li>

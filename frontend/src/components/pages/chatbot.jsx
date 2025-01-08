@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { FiSettings } from 'react-icons/fi';
 import { FaTimes } from 'react-icons/fa';
 import "../css/Chatbot.css";
@@ -37,11 +37,6 @@ const Chatbot = () => {
         verifyToken();
     }, [navigate]);
 
-    
-    if (!isAuthenticated) {
-        return null;
-    }
-    
     useEffect(() => {
         const reminderShow = localStorage.getItem("passwordReminderShown");
         if (!reminderShow){
@@ -136,6 +131,10 @@ const Chatbot = () => {
             alert("Não foi possível alterar a senha. Tente novamente mais tarde.");
         })
     };
+
+    if (!isAuthenticated) {
+        return null;
+    }
 
     return ( 
         <div className="chatbot-wrapper">

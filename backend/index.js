@@ -336,6 +336,8 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// app.post('/api/2FA', async )
+
 app.get('/api/logout', (req, res) => {
     res.clearCookie('token');
     res.send('Logged out');

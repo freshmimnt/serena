@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "../css/gerenciar.css";
 import "bootstrap/dist/css/bootstrap.min.css"; 
 import { FaUser } from "react-icons/fa";
@@ -7,11 +7,28 @@ import { Helmet } from 'react-helmet-async'
 import axios from "axios";
 
 const Gerenciar = () => {
+    const navigate = useNavigate(); 
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [employee, setEmployee] = useState(null);
     const [filteredEmployees, setFilteredEmployees] = useState([]);
     const [showModal, setShowModal] = useState(false);
+
+    useEffect(() => {
+        const verifyToken = async () => {
+            try {
+                const response = await axios.get("http://localhost:8000/api/verifyToken", { withCredentials: true });
+                if (response.data.authenticated) {
+                    setIsAuthenticated(true); 
+                }
+            } catch (error) {
+                console.error("Token verification failed:", error);
+                navigate("/login"); 
+            }
+        };
+        verifyToken();
+    }, [navigate]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -102,6 +119,10 @@ const Gerenciar = () => {
             alert("Error deleting employee. Please try again.");
         }
     };
+
+    if (!isAuthenticated) {
+        return null;
+    }
     
     return (
         <div className="geren-wrapper container fluid">

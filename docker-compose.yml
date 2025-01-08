@@ -77,7 +77,7 @@ services:
   mysql_master:
     image: mysql:8.0
     container_name: mysql_master
-    restart: always
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: serenaAI
@@ -94,7 +94,7 @@ services:
   mysql_replica:
     image: mysql:8.0
     container_name: mysql_replica
-    restart: always
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: serenaAI
