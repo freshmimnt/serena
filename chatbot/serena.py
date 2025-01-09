@@ -3,10 +3,20 @@ import networkx as nx
 import random
 
 from flask import Flask, request, jsonify
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 
 # Configuração do servidor Flask
 app = Flask(__name__)
+
+# Isto serve para o servidor flask saber que eu estou a usar um reverse proxy
+app.wsgi_app = ProxyFix(
+    app.wsgi_app,
+    x_for=1,   
+    x_proto=1, 
+    x_host=1,  
+    x_prefix=1  
+)
 
 # Definição dos estados e mensagens
 states = {
