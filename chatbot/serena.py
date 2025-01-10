@@ -1,8 +1,18 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 import random
+import logging
 
 from flask import Flask, request, jsonify
+
+# Enhanced logging configuration
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()  # This will output to console/stdout
+    ]
+)
 
 
 # Configuração do servidor Flask
@@ -317,28 +327,39 @@ def empathy_response(sentiment, response):
         response = response
     return response
 
+logger = logging.getLogger('chatbot')
+
 @app.route('/chat', methods=['POST'])
 def chat():
     data = request.json
+    logger.debug(f"Received data: {data}")  # Use logger instead of logging
     current_state = data.get("state", "inicio")
+    logger.debug(f"Current state: {current_state}")
     user_input = data.get("message", "").strip().lower()
+    logger.debug(f"User input: {user_input}")
 
     if user_input == "sair":
-        return jsonify({"response": "Adeus! Cuide-se e volte quando precisar.", "next_state": "final"})
+        return jsonify({"response": "Adeus! Cuide-se e volte quando precisar.", "state": "final"})
+
+    # Get the possible transitions for current state
+    possible_transitions = transitions.get(current_state, {})
+    logger.debug(f"Possible transitions: {possible_transitions}")
+    
+    # Get the next state based on user input
+    next_state = possible_transitions.get(user_input, "final")
+    logger.debug(f"Next state: {next_state}")
 
     sentiment = analyze_sentiment(user_input)
-    next_state = transitions.get(current_state, {}).get(user_input, "final")
+    logger.debug(f"Sentiment: {sentiment}")
     
-    if next_state == "final":
-        response = random.choice(states["final"])
-    else:
-        response = random.choice(states[next_state])
-
-        response = empathy_response(sentiment, response)
+    # Get response from the appropriate state
+    response = random.choice(states[next_state])
+    response = empathy_response(sentiment, response)
+    logger.debug(f"Final response: {response}")
 
     history.append({"state": next_state, "user_input": user_input, "response": response})
 
-    return jsonify({"response": response, "next_state": next_state})
+    return jsonify({"response": response, "state": next_state})
 
     
 # Função para iniciar o servidor Flask

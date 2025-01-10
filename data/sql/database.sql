@@ -27,12 +27,10 @@ CREATE TABLE users (
 );
 
 CREATE TABLE chatbots (
-    chatbot_id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    input TEXT,
-    response TEXT,
-    state VARCHAR(50),
+    input TEXT NOT NULL,
+    response TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    INDEX(user_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );

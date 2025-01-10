@@ -128,7 +128,7 @@ const AdminSettings = () => {
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Introduza o seu novo newEmail"
+                    placeholder="Introduza o seu novo email"
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
                   />

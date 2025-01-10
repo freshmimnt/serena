@@ -10,14 +10,12 @@ import axios from "axios";
 const Chatbot = () => {
     const navigate = useNavigate(); 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [chatbotState, setChatbotState] = useState("inicio");
     const [loading, setLoading] = useState(false);
     const [showPasswordReminder, setShowPasswordReminder]= useState(false);
     const lastMessageRef = useRef(null); 
@@ -69,35 +67,33 @@ const Chatbot = () => {
 
     const sendMessage = async () => {
         if (!input.trim()) return;
-    
-        const userMessage = { sender: 'user', text: input };
-        setMessages([...messages, userMessage]);
-    
+
+        const newMessage = { sender: "user", text: input };
+        setMessages([...messages, newMessage]);
+
         try {
-            setLoading(true);
-            const response = await axios.post('http://localhost:8000/api/chatbot', {
-                message: input,
-                state: chatbotState
-            }, { withCredentials: true });
-    
-            const { botResponse, nextState } = response.data;
-            setMessages(prev => [...prev, { sender: 'bot', text: botResponse }]);
-            setChatbotState(nextState);
+            const response = await fetch("http://localhost:8000/api/chatbot", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ prompt: input }),
+            });
+
+            const data = await response.text();
+            const botMessage = { sender: "bot", text: data };
+
+            setMessages((prevMessages) => [...prevMessages, botMessage]);
         } catch (error) {
-            console.error("Error sending message:", error);
-        }finally {
-            setLoading(false);
+            console.error("Erro ao enviar a mensagem:", error);
+            setMessages((prevMessages) => [
+                ...prevMessages,
+                { sender: "bot", text: "Erro ao gerar resposta. Tente novamente mais tarde." }
+            ]);
         }
+
+        setInput(""); 
     };
-    
-    useEffect (() => {
-        axios.get("http://localhost:8000/api/verifyUser", { withCredentials: true })
-        .then((response) => {
-            setName(response.data.name);
-            setEmail(response.data.email);
-        })
-        .catch((error) => console.error('Error fetching user details:', error));
-    }, []);
 
     const handleLogout = () => {
         axios.get("http://localhost:8000/api/logout")
@@ -107,13 +103,14 @@ const Chatbot = () => {
         .catch((error) => {
             console.error("Logout error:", error);
         });
-    };  
+    }; 
 
     const handleDelete = (e) => {
         e.preventDefault();
         axios.delete("http://localhost:8000/api/deleteChat",{ withCredentials: true } )
         .then(() => {
             alert("Chat apagado com sucesso");
+            setMessages([]);
         })
         .catch((error) => {
             console.error("Delete chat error:", error);
@@ -161,26 +158,30 @@ const Chatbot = () => {
 
         <div className="chatbot-container">
             <img src="/Sigla.png" alt="Sigla" />
-            <h1>Olá {name}, sou sua terapeuta.</h1>
-            <div className="chat-display">
-                {messages.map((msg, index) => (
-                    <div key={index} className={`message ${msg.sender}`}>
-                        {msg.text}
-                    </div>
-                ))}
+            <h1>Olá, sou sua terapeuta. Sinta-se à vontade para compartilhar o que estiver em sua mente.</h1>
+                <div className="chat-display">
+                    {messages.map((msg, index) => (
+                        <div
+                            key={index}
+                            className={`message ${msg.sender}`}
+                            ref={index === messages.length - 1 ? lastMessageRef : null}
+                        >
+                            {msg.text}
+                        </div>
+                    ))}
+                </div>
+                <div className="input-container">
+                    <input
+                        type="text"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Diga-me como está se sentindo hoje?"
+                        onKeyDown={handleKeyPress}
+                    />
+                    <button onClick={sendMessage}>Enviar</button>
+                </div>
             </div>
-            {loading && <p>Bot is typing...</p>}
-            <div className="input-container">
-                <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Diga-me como está se sentindo hoje?"
-                    onKeyDown={handleKeyPress} 
-                />
-                <button onClick={sendMessage}>Enviar</button>
-            </div>
-        </div>
+
 
             {isModalOpen && (
                 <div className="modal-over">
@@ -190,11 +191,6 @@ const Chatbot = () => {
                         <div className="modal-section">
                             <h3>Apagar Conversas</h3>
                             <button onClick={handleDelete}>Apagar Todas as Conversas</button>
-                        </div>
-                        <div className="modal-section">
-                            <h3>Autenticação de Dois Fatores (2FA)</h3>
-                            <p>Adicionar uma camada extra de segurança ao iniciar sessão.</p>
-                            <button onClick={() => alert("2FA ativado/desativado")}>Ativar/Desativar 2FA</button>
                         </div>
                         <form onSubmit={handleChangePassword}>
                             <div className="modal-section">
