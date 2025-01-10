@@ -1,85 +1,65 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 import random
-import logging
-
 from flask import Flask, request, jsonify
 
-# Enhanced logging configuration
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler()  # This will output to console/stdout
-    ]
-)
 
-
-# Configuração do servidor Flask
 app = Flask(__name__)
 
-# Definição dos estados e mensagens
+
 states = {
     "inicio": [
         "Olá! Como você está se sentindo hoje? (responda com 'ansioso', 'triste', 'bem', 'sono', 'autoestima' ou 'sair')",
         "Oi, como está o seu dia hoje? Me conta, você está se sentindo ansioso, triste, bem, com problemas para dormir ou autoestima baixa?",
         "Oi! Estou aqui para ouvir você. Como você está se sentindo hoje? Ansioso, triste, bem, com dificuldades para dormir ou autoestima baixa?",
-        "Olá! Como está o seu dia até agora? Está se sentindo ansioso, triste, bem, com problemas de sono ou precisa de ajuda com sua autoestima?",
-        "Oi! Tudo bem por aí? Me conta: você está se sentindo ansioso, triste, bem, com dificuldades para dormir ou está precisando de um pouco de incentivo?",
-        "Oi! Quero saber como você está hoje. Está ansioso, triste, bem, com dificuldades para dormir ou precisa de apoio com sua autoestima?"
+        "Oi! Tudo bem? Como você está se sentindo hoje? Ansioso, triste, bem ou com algum problema específico?",
     ],
     "ansioso": [
         "Sinto muito que você esteja se sentindo assim. Quer tentar um exercício de respiração?",
         "Eu entendo como a ansiedade pode ser difícil. Que tal tentarmos um exercício de respiração?",
         "Poxa, sinto muito que você esteja passando por isso. Posso te ajudar com um exercício de respiração para aliviar a ansiedade?",
-        "Eu sei como a ansiedade pode ser complicada. Vamos tentar um exercício de respiração para ajudar você a se sentir um pouco melhor?",
-        "Entendo que isso deve ser desconfortável. Que tal fazermos juntos um exercício de respiração para aliviar um pouco?",
-        "Sei que a ansiedade pode ser difícil. Que tal fazermos um exercício de respiração juntos para acalmar um pouco?"
-
+        "A ansiedade pode ser desgastante. Que tal fazer uma pausa e tentarmos uma respiração juntos?",
     ],
     "triste": [
         "Sinto muito que você esteja se sentindo assim. Quer conversar mais sobre isso?",
         "Eu lamento ouvir isso. Posso sugerir algumas dicas para melhorar seu humor?",
-        "Eu lamento que você esteja passando por isso. Quer conversar ou ouvir algumas sugestões para melhorar um pouquinho o dia?",
         "Sei que a tristeza pode ser pesada, mas você não está sozinho(a). Posso te ajudar com algumas dicas ou só ouvir, se preferir.",
-        "Eu lamento muito que você esteja se sentindo assim. Estou aqui para ajudar da forma que você precisar. Vamos conversar?",
-        "Entendo que você está triste, e está tudo bem se sentir assim. Estou aqui para ajudar. Posso sugerir algo para melhorar ou só ouvir você?"
+        "Às vezes é difícil lidar com a tristeza. Se você quiser, posso sugerir algumas coisas que podem ajudar.",
     ],
     "bem": [
         "Que bom saber que você está bem! Tem algo com o qual eu possa te ajudar hoje?",
         "Fico feliz por saber que você está bem! Algo específico que você gostaria de conversar?",
         "Que notícia boa saber que você está bem! Se quiser, estou aqui para qualquer coisa que precisar.",
-        "Bom saber que você está bem! Tem algo que queira compartilhar ou perguntar?",
-        "Fico contente por saber que você está bem! O que mais você gostaria de conversar hoje?"        
-    ],
-    "respiracao": [
-        "Respire profundamente, segure a respiração por 7 segundos e depois expire devagar por 8 segundos. Como você se sente agora? Quer tentar mais uma vez?",
-        "Vamos tentar respirar profundamente. Respire por 4 segundos, segure por 7 e expire por 8. Repetir mais vezes ajuda!",
-        "Respirar devagar pode ajudar a aliviar a ansiedade. Inspire pelo nariz por 4 segundos, segure por 7 e solte o ar devagar por 8 segundos. Como está se sentindo agora? Posso te guiar mais vezes?",
-        "Vamos tentar: respire fundo pelo nariz por 4 segundos, segure por 7 e expire lentamente pela boca por 8 segundos. Repetir ajuda a relaxar ainda mais. Quer continuar?",
-        "Vamos lá: inspire pelo nariz por 4 segundos, segure a respiração por 7 segundos e expire lentamente pela boca por 8 segundos. É um ótimo jeito de acalmar a mente. Como se sente?",
-        "Tudo bem, vamos juntos: inspire profundamente pelo nariz por 4 segundos, segure por 7, e solte o ar pela boca por 8 segundos. Como está se sentindo agora? Quer repetir mais algumas vezes?"
-
-    ],
-    "dicas": [
-        "Experimente sair para dar uma caminhada ou ouvir uma música relaxante. Algo mais que eu possa sugerir?",
-        "Que tal tentar ouvir uma música que você goste ou tomar um ar fresco?"
-    ],
-    "sono": [
-        "Como você está dormindo ultimamente? Tem enfrentado dificuldades?",
-        "Problemas para dormir podem ser complicados. Posso sugerir algumas dicas para melhorar o sono?"
+        "Que ótimo que está tudo bem! Como posso te ajudar hoje? Quer compartilhar algo bom que tenha acontecido?",
     ],
     "autoestima": [
-        "A autoestima é essencial! Que tal listar 3 coisas que você gosta em você?",
-        "Às vezes, precisamos ser mais gentis conosco. Posso te ajudar com isso?"
+        "Eu sei que a autoestima pode ser desafiadora às vezes. Quer conversar sobre isso?",
+        "A autoestima é algo importante. Posso te ajudar com algumas dicas?",
+        "Sei que a autoestima pode ser uma questão difícil. Gostaria de conversar mais sobre isso?",
+    ],
+    "sono": [
+        "Dormir bem é essencial para o bem-estar. Você tem tido dificuldades para dormir?",
+        "O sono afeta muito como nos sentimos. Tem algo que tem te dificultado a dormir?",
+        "O sono é muito importante para nossa saúde. Está tendo problemas para dormir?",
     ],
     "depressao": [
-        "Sinto muito que você esteja se sentindo assim. Já pensou em procurar ajuda profissional?",
-        "A depressão pode ser muito difícil. Posso sugerir algumas estratégias para lidar com isso?"
+        "Eu entendo que a depressão pode ser muito difícil. Se você quiser, podemos conversar mais sobre isso.",
+        "A depressão é algo muito pesado, e não é fácil lidar com ela sozinho(a). Estou aqui para você.",
+        "Se você estiver passando por isso, posso te oferecer algumas sugestões ou só ouvir você.",
     ],
     "stress": [
-        "Parece que você está lidando com muito estresse. Que tal tentarmos um exercício de relaxamento?",
-        "O estresse pode ser desgastante. Posso sugerir algumas atividades para aliviar esse sentimento?"
+        "O estresse pode ser bem cansativo. Gostaria de conversar mais sobre o que tem te causado isso?",
+        "Eu sei que o estresse pode ser sobrecarregante. Está se sentindo assim ultimamente?",
+        "O estresse é uma reação comum, mas também pode ser desgastante. Posso sugerir algumas maneiras de aliviá-lo?",
+    ],
+    "respiracao": [
+        "Vamos respirar profundamente. Inspire pelo nariz e expire lentamente pela boca. Pode ajudar a aliviar a ansiedade.",
+        "Tente fazer uma respiração lenta. Inspire por 4 segundos, segure por 4 e expire por 4. Isso pode ajudar muito.",
+        "Respire profundamente. Inspire por 4 segundos, segure, depois expire lentamente. Isso pode aliviar a tensão.",
+    ],
+    "meditacao": [
+        "A meditação pode ajudar a aliviar a ansiedade e o estresse. Gostaria de tentar agora?",
+        "Que tal fazer uma meditação guiada por alguns minutos? Pode ser útil para acalmar a mente.",
     ],
     "frustracao": [
         "Parece que você está frustrado. Que tal falar mais sobre o que está acontecendo?",
@@ -200,42 +180,32 @@ states = {
     "final": [
         "Foi ótimo conversar com você! Se precisar de ajuda novamente, estarei aqui. Até logo!",
         "Espero que nossa conversa tenha ajudado de alguma forma. Cuide-se bem e lembre-se de que sempre estarei aqui para você. Até breve!",
-        "Obrigado por compartilhar um pouco do seu tempo comigo. Estarei aqui sempre que precisar conversar. Fique bem!",
-        "Lembre-se de que não está sozinho. Se precisar de apoio, estarei sempre por perto. Tenha um ótimo dia!"
-    ]
+        "Fico feliz que tenha compartilhado um pouco de como está se sentindo. Quando precisar, estarei aqui. Cuide-se!",
+    ],
 }
 
 
-# Definição das transições entre estados
 transitions = {
     "inicio": {
-        "ansioso": "ansioso", "triste": "triste", "bem": "bem", "sono": "sono",
-        "autoestima": "autoestima", "depressao": "depressao", "stress": "stress",
-        "frustracao": "frustracao", "solidao": "solidao", "medo": "medo",
-        "culpa": "culpa", "ansiedade_social": "ansiedade_social",
-        "transtorno_obsessivo": "transtorno_obsessivo", "distorcao_cognitiva": "distorcao_cognitiva",
-        "tristeza_geral": "tristeza_geral", "raiva": "raiva",
-        "culpa_procrastinacao": "culpa_procrastinacao", "esgotamento": "esgotamento",
-        "ansiedade_geral": "ansiedade_geral", "depressao_geral": "depressao_geral",
-        "transtorno_alimentar": "transtorno_alimentar", "reconhecer_sentimentos": "reconhecer_sentimentos",
-        "excessiva_autocrítica": "excessiva_autocrítica", "fobias": "fobias",
-        "estigma_psiquiatrico": "estigma_psiquiatrico", "relacionamentos": "relacionamentos",
-        "preocupacao_excessiva": "preocupacao_excessiva", "isolamento_social": "isolamento_social",
-        "vulnerabilidade_emocional": "vulnerabilidade_emocional",
-        "superar_traumas": "superar_traumas", "autoaceitacao": "autoaceitacao",
-        "autoestima_abaixo": "autoestima_abaixo", "reconhecer_fechamento_emocional": "reconhecer_fechamento_emocional",
-        "aceitar_ajuda": "aceitar_ajuda", "enfrentar_inseguranca": "enfrentar_inseguranca",
-        "sentimento_de_adequacao": "sentimento_de_adequacao"
+        "ansioso": "ansioso", "triste": "triste", "bem": "bem", "sair": "final", "autoestima": "autoestima", "sono": "sono",
     },
-    "ansioso": {"sim": "respiracao", "não": "final"
+    "ansioso": {
+        "sim": "respiracao", "não": "final", "meditar": "meditacao", "sair": "final",
     },
-    "triste": { "sim": "dicas", "não": "final"
+    "triste": {
+        "sim": "dicas", "não": "final", "meditar": "meditacao", "sair": "final",
     },
-    "bem": {"sim": "inicio", "não": "final"
+    "bem": {
+        "sim": "inicio", "não": "final", "sair": "final",
     },
-    "respiracao": {"sim": "inicio", "não": "final"
+    "respiracao": {
+        "sim": "inicio", "não": "final", "sair": "final",
     },
-    "dicas": { "sim": "inicio", "não": "final"
+    "dicas": {
+        "sim": "inicio", "não": "final", "sair": "final",
+    },
+    "meditacao": {
+        "sim": "inicio", "não": "final", "sair": "final",
     },
     "sono": { "sim": "inicio", "não": "final"
     },
@@ -305,67 +275,95 @@ transitions = {
     }
 }
 
-# Histórico detalhado
-history = []
 
-# Função para analisar sentimentos
 def analyze_sentiment(user_input):
-    if any(word in user_input for word in ["não", "triste", "difícil", "ansioso"]):
-        return "negativo"
-    elif any(word in user_input for word in ["sim", "bem", "feliz", "ótimo"]):
-        return "positivo"
-    else:
+    if not user_input:
         return "neutro"
     
-# Função para responder com mais empatia
-def empathy_response(sentiment, response):
-    if sentiment == "negativo":
-        response = "Eu sei que pode estar sendo difícil. " + response
-    elif sentiment == "positivo":
-        response = "Fico muito feliz que você esteja se sentindo melhor! " + response
-    else:
-        response = response
-    return response
+    sentiment_keywords = {
+        "negativo": ["não", "triste", "difícil", "ansioso", "preocupado", "medo", "depressão", "estresse", "cansado"],
+        "positivo": ["sim", "bem", "feliz", "ótimo", "alegria", "legal", "melhorando", "grato"],
+        "neutro": ["ok", "sim", "não sei", "talvez", "meio a meio", "indiferente"],
+    }
 
-logger = logging.getLogger('chatbot')
+    for sentiment, keywords in sentiment_keywords.items():
+        if any(word in user_input for word in keywords):
+            return sentiment
+    
+    return "neutro"
+
+
+def empathy_response(sentiment, response):
+    empathy_map = {
+        "negativo": "Eu sei que pode estar sendo difícil. Vou te sugerir algo para ajudar: ",
+        "positivo": "Fico muito feliz que você esteja se sentindo melhor! ",
+        "ansioso": "Entendo como a ansiedade pode ser complicada. Vamos respirar fundo juntos. ",
+        "neutro": "Eu entendo. Estou aqui para ouvir você. ",
+    }
+
+    empathy_prefix = empathy_map.get(sentiment, "")
+    
+    if sentiment in ["negativo", "ansioso", "triste"]:
+        suggestion = suggest_relaxation() if sentiment == "ansioso" else suggest_physical_activity()
+        return empathy_prefix + response + " " + suggestion
+    
+    return empathy_prefix + response
+
+
+def suggest_physical_activity():
+    activities = [
+        "Que tal levantar da cadeira e fazer alguns alongamentos? Isso pode ajudar a aliviar a tensão.",
+        "Um pouco de movimento pode aliviar a ansiedade. Que tal dar uma caminhada curta?",
+        "Exercícios físicos são ótimos para reduzir o estresse. Experimente um alongamento rápido.",
+    ]
+    return random.choice(activities)
+
+def suggest_relaxation():
+    relaxation_techniques = [
+        "Que tal tentar uma respiração profunda agora? Inspire profundamente e solte lentamente.",
+        "Uma técnica relaxante é a respiração abdominal. Tente inspirar profundamente e expirar devagar.",
+        "Vamos tentar uma técnica simples de relaxamento? Respire profundamente por alguns segundos e sinta o alívio.",
+    ]
+    return random.choice(relaxation_techniques)
+
+
+def check_if_final_state(next_state):
+    emotional_states = ["ansioso", "triste", "autoestima", "depressao", "stress"]
+    
+    if next_state.lower() in emotional_states:
+        return False
+    
+    return True
 
 @app.route('/chat', methods=['POST'])
 def chat():
     data = request.json
-    logger.debug(f"Received data: {data}")  # Use logger instead of logging
     current_state = data.get("state", "inicio")
-    logger.debug(f"Current state: {current_state}")
     user_input = data.get("message", "").strip().lower()
-    logger.debug(f"User input: {user_input}")
 
     if user_input == "sair":
-        return jsonify({"response": "Adeus! Cuide-se e volte quando precisar.", "state": "final"})
-
-    # Get the possible transitions for current state
-    possible_transitions = transitions.get(current_state, {})
-    logger.debug(f"Possible transitions: {possible_transitions}")
-    
-    # Get the next state based on user input
-    next_state = possible_transitions.get(user_input, "final")
-    logger.debug(f"Next state: {next_state}")
+        return jsonify({"response": "Adeus! Cuide-se e volte quando precisar.", "next_state": "final"})
 
     sentiment = analyze_sentiment(user_input)
-    logger.debug(f"Sentiment: {sentiment}")
+    next_state = transitions.get(current_state, {}).get(user_input, "final")
     
-    # Get response from the appropriate state
-    response = random.choice(states[next_state])
-    response = empathy_response(sentiment, response)
-    logger.debug(f"Final response: {response}")
+   
+    if check_if_final_state(next_state):
+        response = random.choice(states["final"])
+        next_state = "final"
+    else:
+        if next_state in states:
+            response = random.choice(states[next_state])
+        else:
+            response = random.choice(states["final"])
 
-    history.append({"state": next_state, "user_input": user_input, "response": response})
+        response = empathy_response(sentiment, response)
 
-    return jsonify({"response": response, "state": next_state})
+    return jsonify({"response": response, "next_state": next_state})
 
-    
-# Função para iniciar o servidor Flask
+
 def start_server():
     app.run(host="0.0.0.0", port=5000)
 
-# aqui inicia o servidor
 if __name__ == "__main__":
     start_server()

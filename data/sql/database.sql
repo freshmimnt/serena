@@ -26,8 +26,8 @@ CREATE TABLE users (
     UNIQUE (email)
 );
 
-CREATE TABLE chatbots (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE conversations (
+    conversation_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     input TEXT NOT NULL,
     response TEXT NOT NULL,
