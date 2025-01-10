@@ -1,0 +1,250 @@
+.header {   
+    background-color: #fff; 
+    gap: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+}
+
+.header-content img {
+    width: 300px; 
+} 
+
+.header nav ul {
+    padding: 0; 
+    margin: 0; 
+}
+
+.header nav ul li {
+    display: inline; 
+    margin-left: 30px;
+    margin-right: 50px;
+
+}
+
+.header nav ul li a {
+    text-decoration: none; 
+    color: #000; 
+    text-shadow: #000;
+    font-size: 23px;
+    font-weight: bold;    
+}
+
+
+.home {
+    display: flex;
+    align-items: center;
+    background-color: #00285e;
+    height: 600px;
+    padding: 160px;
+    position: relative;
+    
+}
+
+.text-container {
+    display: flex;
+    flex-direction: column; 
+    justify-content: center; 
+}
+
+.home h1 {
+    color: #abdde6;
+    font-size: 150px;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+.home h2 {
+    color: #fff;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 50px;
+}
+
+.home img {
+    max-height: 600px;
+    position: absolute; 
+    right: 0px;
+    top: 50%;
+    transform: translateY(-50%); 
+}
+
+.servico {
+    padding: 50px;
+    display: flex; 
+    flex-direction: column;
+    align-items: center; 
+    justify-content: center; 
+    font-family: Georgia, 'Times New Roman', Times, serif;
+}
+
+
+.text-servico {
+    text-align: center; 
+    width: 100%; 
+}
+
+.text-servico h1 {
+    font-size: 40px;
+    color: #ed4a0e;
+    margin-top: 50px;
+}
+
+.text-servico p {
+    font-size: 30px;
+    margin-top: 30px;
+}
+
+
+.imagem-grupo {
+    margin-top: 50px;
+    display: flex;
+    justify-content: center; 
+    align-items: center;
+    padding-right: 20px;
+    padding-left: 20px;
+}
+
+.imagem-grupo img {
+    max-width: 500px;
+    height: auto;
+    padding-left: 10px;
+}
+
+
+.text-container-grupos {
+    display: flex;
+    justify-content: center; 
+    align-items: flex-start; 
+    margin-top: 20px;
+    padding: 10px;
+    
+}
+
+.text-grupo1, .text-grupo2, .text-grupo3 {
+    
+    padding: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    
+}
+
+
+.text-grupo1 h3, .text-grupo2 h3, .text-grupo3 h3 {
+    font-size: 24px;
+    color: #ed4a0e;
+}
+
+.text-grupo1 h4, .text-grupo2 h4, .text-grupo3 h4 {
+    font-size: 18px;
+    color: #333;
+}
+
+.text-grupo1 p, .text-grupo2 p, .text-grupo3 p {
+    font-size: 16px;
+    color: #555;
+}
+
+.box-text {
+    display: flex;
+    justify-content: space-between; 
+    align-items: flex-start; 
+    margin-top: 35px;
+    margin-left: 20px;
+    margin-right: 20px;
+    padding: 10px;
+    gap: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+
+.box-demo {
+    background-color: #fff1e1;
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.3s;
+
+    
+}
+
+.box-demo:hover {
+    transform: scale(1.05);
+}
+
+.box-compra {
+    background-color: #f9e2f5;
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.3s; 
+}
+
+.box-compra:hover {
+    transform: scale(1.05);
+}
+
+.box-text button {
+    width: 100%;
+    max-width: 300px;
+    padding: 12px;
+    background-color:#000;
+    color: #fff;
+    border-radius: 40px;
+    font-size: 18px;
+    margin-top: 50px;
+    cursor: pointer;
+}
+
+.text-sobre {
+    background-color: #abdde6;
+    display: flex; 
+    width: 100%;
+    height: 500px;
+    margin: 0;
+    padding: 0;   
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-family: Georgia, 'Times New Roman', Times, serif;
+}
+
+.text-sobre img {
+    width: 40%; 
+    height: auto;
+}
+
+.text-sobre .text-content {
+    display: flex;
+    flex-direction: column; 
+    justify-content: center;
+    width: 50%; 
+    padding: 50px;
+}
+
+.text-sobre h1 {
+    font-size: 50px;
+    margin: 0; 
+}
+
+.text-sobre p {
+    font-size: 20px;  
+    margin-top: 15px; 
+}
+
+.final {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 24px; 
+    font-weight: bold;
+    color: #333;     
+    padding: 10px 20px;    
+    text-align: center; 
+    margin: 20px;    
+    transition: transform 0.3s; 
+}
+
+.final:hover {
+    transform: scale(1.05);
+}

@@ -1,0 +1,134 @@
+services:
+  back-end:
+    build:
+      context: backend
+      dockerfile: Dockerfile.dev
+    container_name: back-end
+    restart: always
+    working_dir: /app
+    networks:
+      - my_network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql_master
+
+  back-end2:
+    build:
+      context: backend
+      dockerfile: Dockerfile.dev
+    container_name: back-end2
+    restart: always
+    working_dir: /app
+    networks:
+      - my_network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules/
+    ports:
+      - "3001:3000"
+    depends_on:
+      - mysql_master
+
+  front-end:
+    build:
+      context: frontend
+      dockerfile: Dockerfile.dev
+    container_name: front-end
+    restart: always
+    working_dir: /app
+    networks:
+      - my_network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+
+  front-end2:
+    build:
+      context: frontend
+      dockerfile: Dockerfile.dev
+    container_name: front-end2
+    restart: always
+    working_dir: /app
+    networks:
+      - my_network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules/
+    ports:
+      - "5174:5173"
+
+  flask-chatbot:
+    build:
+      context: chatbot
+      dockerfile: Dockerfile.dev
+    container_name: flask-chatbot
+    restart: always
+    networks:
+      - my_network
+    ports:
+      - "5000:5000"
+
+  mysql_master:
+    image: mysql:8.0
+    container_name: mysql_master
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: serenaAI
+      MYSQL_USER: serena
+      MYSQL_PASSWORD: password
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_master_data:/var/lib/mysql
+    command: --server-id=1 --log-bin=mysql-bin --binlog-do-db=serenaAI --binlog-format=row
+    networks:
+      - my_network
+
+  mysql_replica:
+    image: mysql:8.0
+    container_name: mysql_replica
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: serenaAI
+      MYSQL_USER: serena
+      MYSQL_PASSWORD: password
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql_replica_data:/var/lib/mysql
+    command: --server-id=2 --relay-log=mysql-relay-bin --log-bin=mysql-bin --read-only=1
+    networks:
+      - my_network
+
+  nginx:
+    build:
+      context: nginx
+      dockerfile: Dockerfile.dev
+    container_name: nginx
+    restart: always
+    tty: true
+    ports:
+      - "8000:80"
+    networks:
+      - my_network
+    depends_on:
+      - back-end
+      - back-end2
+      - front-end
+      - front-end2
+
+volumes:
+  mysql_master_data:
+  mysql_replica_data:
+
+networks:
+  my_network:
+    driver: bridge

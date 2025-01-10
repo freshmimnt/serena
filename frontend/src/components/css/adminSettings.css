@@ -1,0 +1,75 @@
+.setting-wrapper {
+    display: flex;
+    height: 100vh;
+    margin: 0 auto;
+    border-radius: 8px;
+    overflow-y: auto;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+  }
+  
+  .sidebar-setting {
+    width: 350px;
+    padding: 15px;
+    background-color: #00285e;
+    border-right: 1px solid #ddd;
+  }
+  
+  .sidebar-setting h4 {
+    margin-bottom: 20px;
+    margin-top: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    color: #00285e;
+    font-size: 4.2em;
+  }
+  
+  .sidebar-setting .nav-link {
+    color: #000;
+    padding: 10px;
+    font-size: 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+  }
+  
+  .sidebar-setting .nav-link.active {
+    background-color: #00285e;
+    color: white;
+  }
+
+  .setting-container {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    justify-content: top;
+    text-align: center;
+    margin-top: 50px;
+  }
+  
+  .setting-container h2 {
+    font-weight: bold;
+  }
+  
+  .info-section h5 {
+    font-weight: bold;
+    margin-top: 20px;
+  }
+  
+  .admin-input-container h4 {
+    margin-top: 50px;
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .input-group-text {
+    background-color: #e9ecef;
+    height: 50px;
+  }
+  
+  .btn-primary {
+    background-color: #00285e;
+    border-color: #00285e;
+  }
+  
