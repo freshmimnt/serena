@@ -304,7 +304,7 @@ app.post('/api/requestDemo', async (req, res) => {
             to: email,
             from: 'serena.sistema@gmail.com',
             subject: 'Your Demo is Active',
-            text: `Olá ${name},\n\nYour demo is now active and will expire on ${demoExpiry.toDateString()}.\nHere are your login details:\nEmail: ${email}\nPassword: ${password}\n\nPlease log in to explore our system.\n\n- Serena Team`,
+            text: `Olá ${name},\n\A tua demo está ativa e expira em ${demoExpiry.toDateString()}.\n\nEmail: ${email}\nPassword: ${password}\n\n - Equipa Serena`,
         };
 
         await sgMail.send(msg);
@@ -382,7 +382,7 @@ app.post("/api/addEmployee", async (req, res) => {
           to: email,
           from: 'serena.sistema@gmail.com', 
           subject: 'Bem-vindo',
-          text: `Bem-vindo ${name}!. As suas credenciais:\n\nEmail: ${email}\nPassword: ${randomPassword}\n\nPor favor altere a sua password por motivos de segurança.`,
+          text: `Bem-vindo/a ${name}!. As suas credenciais:\n\nEmail: ${email}\nPassword: ${randomPassword}\n\nPor favor altere a sua password por motivos de segurança.`,
       };
       await sgMail.send(msg);
 

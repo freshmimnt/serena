@@ -3,5 +3,3 @@ matplotlib
 networkx
 requests
 jsonify
-openai
-python-dotenv
